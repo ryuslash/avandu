@@ -29,7 +29,7 @@
 (require 'json)
 
 (defgroup avandu nil
-  "Tiny Tiny RSS for emacs cusomizations."
+  "Tiny Tiny RSS interface for emacs."
   :group 'applications)
 
 (defface avandu-overview-feed
@@ -66,7 +66,8 @@
   "*internal* Session id for avandu.")
 
 (defvar avandu-tt-rss-api-url nil
-  "URL of your Tiny Tiny RSS instance.")
+  "URL of your Tiny Tiny RSS instance. For example:
+  http://tt-rss.org/demo/api/")
 
 (defvar avandu-user nil
   "Username of your Tiny Tiny RSS account.")
@@ -79,8 +80,7 @@
     (set-keymap-parent map button-map)
     (define-key map "c" 'avandu-feed-catchup)
     map)
-  "Keymap for buttons of articles in `avandu-overview-mode', uses
-  `button-map' as its parent.")
+  "Keymap for feeds in `avandu-overview-mode'.")
 
 (defvar avandu-article-button-map
   (let ((map (make-sparse-keymap)))
@@ -88,8 +88,7 @@
     (define-key map "o" 'avandu-browse-article)
     (define-key map "r" 'avandu-mark-article-read)
     map)
-  "Keymap for buttons of articles in `avandu-overview-mode', uses
-  `button-map' as its parent.")
+  "Keymap for articles in `avandu-overview-mode'.")
 
 (defvar avandu-overview-map
   (let ((map (make-sparse-keymap)))
@@ -99,11 +98,13 @@
     (define-key map "p" 'avandu-previous-article)
     (define-key map "P" 'avandu-previous-feed)
     map)
-  "Keymap for `avandu-overview-mode', uses `special-mode-map' as
-  its parent.")
+  "Keymap for `avandu-overview-mode'.")
 
 (define-derived-mode avandu-overview-mode special-mode "Avandu:Overview"
   "Major mode fo the avandu overview screen.
+
+This screen shows the articles categorized by feed as a list. It
+doesn't sort the list, so you'll have to set that up in tt-rss.
 
 \\{avandu-overview-map}
 \\<avandu-overview-map>"
@@ -120,15 +121,31 @@
   (cdr (assq 'session_id (assq 'content results))))
 
 (defun avandu--check-login ()
+  "Check to see if we're (still) logged in, try to login
+otherwise. Signals an error if we're not logged in *and* login
+was unsuccesful."
   (unless (or (and avandu--session-id (avandu-logged-in-p))
               (avandu-login))
     (error "Could not log in to tt-rss")))
 
 (defmacro avandu-getset (var prompt &optional passwdp)
+  "Ask the user for, and then save, VAR with PROMPT. Use
+`read-passwd' if PASSWDP and `read-string' otherwise."
   `(or ,var (setq ,var (,(if passwdp 'read-passwd 'read-string)
                         ,prompt))))
 
 (defun avandu-send-command (data)
+  "Send a command with parameters DATA to tt-rss. The current
+session-id is added to the request and then DATA is passed on to
+`json-encode'.
+
+DATA should be an association list with at least an OP value.
+For example:
+
+    (avandu-send-command '((op . \"isLoggedIn\")))
+
+This function returns the result of `json-read' passed over the
+returned json."
   (let* ((url-request-data
           (json-encode
            (if avandu--session-id
@@ -146,6 +163,10 @@
     result))
 
 (defun avandu-feed-catchup ()
+  "Send a request to tt-rss to \"Catch up\" with a feed.  This
+  means that all the (unread) articles in a feed will be marked
+  as read. After having completed this request the overview is
+  reloaded."
   (interactive)
   (let* ((button (button-at (point)))
          (id (button-get button 'feed-id)))
@@ -154,6 +175,12 @@
   (revert-buffer))
 
 (defun avandu-mark-article-read (&optional button)
+  "Send a request to tt-rss to mark an article as read.
+
+BUTTON, if given, should be a button widget, as created by
+`button-insert' and such, which contains FEED-ID. If BUTTON is
+nil, it will be assumed that `point' is currently within the
+bounds of a button."
   (interactive)
   (let* ((button (or button (button-at (point))))
          (id (button-get button 'article-id)))
@@ -165,6 +192,8 @@
   (avandu-next-article))
 
 (defun avandu-logged-in-p ()
+  "Send a request to tt-rss to see if we're (still) logged
+in. This function returns t if we are, or nil if we're not."
   (let* ((response (avandu-send-command '((op . "isLoggedIn"))))
          (result (cdr (assq 'status (assq 'content response)))))
     (if (eq result :json-false)
@@ -172,6 +201,10 @@
       result)))
 
 (defun avandu-login ()
+  "Send a request to log in to tt-rss. If `avandu-username' or
+`avandu-password' have not been specified they will be asked for
+and saved in memory. This function returns t on succes, nil
+otherwise."
   (interactive)
   (let ((result (avandu-send-command
                  `((op . "login")
@@ -185,12 +218,15 @@
       nil)))
 
 (defun avandu-new-articles-count ()
+  "Send a request to tt-rss for the total number of unread
+feeds."
   (interactive)
   (avandu--check-login)
   (let ((result (avandu-send-command '((op . "getUnread")))))
     (message (cdr (assq 'unread (assq 'content result))))))
 
 (defmacro avandu--next-button-of-type (direction type)
+  "Go DIRECTION and find the next button of a TYPE."
   (let ((prop (case type
                 (feed 'feed-id)
                 (article 'article-id)
@@ -216,22 +252,28 @@
        (goto-char pos))))
 
 (defun avandu-next-article ()
+  "Search forward for the next article."
   (interactive)
   (avandu--next-button-of-type forward article))
 
 (defun avandu-previous-article ()
+  "Go backward and find the next article."
   (interactive)
   (avandu--next-button-of-type backward article))
 
 (defun avandu-next-feed ()
+  "Go forward and find the next feed."
   (interactive)
   (avandu--next-button-of-type forward feed))
 
 (defun avandu-previous-feed ()
+  "Go backward and find the next feed."
   (interactive)
   (avandu--next-button-of-type backward feed))
 
 (defun avandu--insert-feed-title (id title)
+  "Insert a button with the label TITLE and store ID in the
+feed-id property."
   (unless (eq (point) (point-min)) (newline))
   (insert-button
    (replace-regexp-in-string "^[ \n\t]*\\|[ \n\t]*$" "" title)
@@ -251,6 +293,8 @@
     (avandu-mark-article-read button)))
 
 (defun avandu--insert-article-title (id link title)
+  "Insert a button with the label TITLE and store ID and LINK in
+the article-id and link properties, respectively."
   (insert-button
    (replace-regexp-in-string "^[ \n\t]*\\|[ \n\t]*$" "" title)
    'face 'avandu-overview-unread-article
@@ -263,6 +307,8 @@
 
 ;;;###autoload
 (defun avandu-list ()
+  "Request the headlines of unread articles and list them grouped
+by feed."
   (interactive)
   (avandu--check-login)
   (let ((buffer (get-buffer-create "*avandu-overview*"))
