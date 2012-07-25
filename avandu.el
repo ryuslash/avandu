@@ -62,6 +62,11 @@
   "Face for read article titles in avandu overview."
   :group 'avandu)
 
+(defface avandu-overview-excerpt
+  '((t (:inherit shadow :slant italic)))
+  "Face for article excerpts in avandu overview."
+  :group 'avandu)
+
 (defvar avandu--session-id nil
   "*internal* Session id for avandu.")
 
@@ -274,7 +279,7 @@ feeds."
 (defun avandu--insert-feed-title (id title)
   "Insert a button with the label TITLE and store ID in the
 feed-id property."
-  (unless (eq (point) (point-min)) (newline))
+  (unless (eq (point) (point-min)) (insert-char ?\n 1))
   (insert-button
    (replace-regexp-in-string "^[ \n\t]*\\|[ \n\t]*$" "" title)
    'face 'avandu-overview-feed
@@ -282,8 +287,7 @@ feed-id property."
    'keymap avandu-feed-button-map
    'action #'(lambda (button)
                (message "%s" (button-label button))))
-  (newline)
-  (newline))
+  (insert-char ?\n 2))
 
 (defun avandu-browse-article ()
   "Browse the current button's article url."
@@ -303,7 +307,22 @@ the article-id and link properties, respectively."
    'keymap avandu-article-button-map
    'action #'(lambda (button)
                (message "%s" (button-get button 'link))))
-  (newline))
+  (insert-char ?\n 1))
+
+(defun avandu--insert-article-excerpt (excerpt)
+  "Insert the excerpt of an article."
+  (let ((start-pos (point))
+        end-pos)
+    (insert
+     (propertize
+      (replace-regexp-in-string
+       "&hellip;" "..."
+       (replace-regexp-in-string "\\`[ \t\n]*\\|[ \t\n]*$" ""
+                                 excerpt))
+      'face 'avandu-overview-excerpt))
+    (indent-region start-pos (point) tab-width)
+    (fill-region start-pos (point)))
+  (insert-char ?\n 1))
 
 ;;;###autoload
 (defun avandu-list ()
@@ -314,7 +333,8 @@ by feed."
   (let ((buffer (get-buffer-create "*avandu-overview*"))
         (result (avandu-send-command '((op . "getHeadlines")
                                        (feed_id . -4)
-                                       (view_mode . "unread"))))
+                                       (view_mode . "unread")
+                                       (show_excerpt . t))))
         feed-id)
     (with-current-buffer buffer
       (setq buffer-read-only nil)
@@ -329,7 +349,9 @@ by feed."
                 (avandu--insert-article-title
                  (cdr (assq 'id elt))
                  (cdr (assq 'link elt))
-                 (cdr (assq 'title elt))))
+                 (cdr (assq 'title elt)))
+                (avandu--insert-article-excerpt
+                 (cdr (assq 'excerpt elt))))
             (cdr (assq 'content result)))
       (setq buffer-read-only t)
       (goto-char (point-min))
