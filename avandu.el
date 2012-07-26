@@ -105,6 +105,13 @@
     map)
   "Keymap for `avandu-overview-mode'.")
 
+(defconst avandu-entity-replacement-alist
+  '(("hellip" . 8230)
+    ("qout" . 34)
+    ("amp" . 38))
+  "What to replace the part between & and ; of HTML entities with
+  names.")
+
 (define-derived-mode avandu-overview-mode special-mode "Avandu:Overview"
   "Major mode fo the avandu overview screen.
 
@@ -309,20 +316,52 @@ the article-id and link properties, respectively."
                (message "%s" (button-get button 'link))))
   (insert-char ?\n 1))
 
+(defun avandu-clean-text (text)
+  "Go through TEXT and remove any trailing and leading whitespace
+from it, then look for any HTML entities and either replace them
+with their char value or with the value in
+`avandu-entity-replacement-alist'."
+  (with-temp-buffer
+    (insert text)
+    (while (re-search-forward
+            "\\`[[:space:][:cntrl:]]+\\|[[:space:][:cntrl:]]+\\'" nil t)
+      (replace-match ""))
+
+    (goto-char (point-min))
+    (while (search-forward "&" nil t)
+      (let ((pos (point)))
+        (save-excursion
+          (when (search-forward ";" nil t)
+            (let* ((sstring (buffer-substring pos (1- (point))))
+                   (char-code
+                    (if (= (char-after pos) ?#)
+                        (unless (string-match-p "[^[:digit:]]"
+                                                (substring sstring 1))
+                          (string-to-number (substring sstring 1)))
+                      (assoc sstring avandu-entity-replacement-alist))))
+              (when char-code
+                (delete-region (1- pos) (point))
+                (insert-char (if (consp char-code)
+                                 (cdr char-code)
+                               char-code) 1)))))))
+
+    (setq text (buffer-string)))
+  text)
+
 (defun avandu--insert-article-excerpt (excerpt)
   "Insert the excerpt of an article."
   (let ((start-pos (point))
-        end-pos)
-    (insert
-     (propertize
-      (replace-regexp-in-string
-       "&hellip;" "..."
-       (replace-regexp-in-string "\\`[ \t\n]*\\|[ \t\n]*$" ""
-                                 excerpt))
-      'face 'avandu-overview-excerpt))
-    (indent-region start-pos (point) tab-width)
-    (fill-region start-pos (point)))
-  (insert-char ?\n 1))
+        end-pos
+        (text (replace-regexp-in-string
+               "[ \t\n]*$" "" (avandu-clean-text excerpt))))
+    (unless (or (not text) (string= text ""))
+      (insert
+       (propertize
+        text
+        'face 'avandu-overview-excerpt))
+      (indent-region start-pos (point) tab-width)
+      (fill-region start-pos (point))
+      (insert-char ?\n 1))))
 
 ;;;###autoload
 (defun avandu-list ()
