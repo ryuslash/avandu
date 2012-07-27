@@ -108,7 +108,8 @@
 (defconst avandu-entity-replacement-alist
   '(("hellip" . 8230)
     ("qout" . 34)
-    ("amp" . 38))
+    ("amp" . 38)
+    ("nbsp" . 32))
   "What to replace the part between & and ; of HTML entities with
   names.")
 
