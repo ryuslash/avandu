@@ -125,6 +125,12 @@ doesn't sort the list, so you'll have to set that up in tt-rss.
   (set (make-local-variable 'revert-buffer-function)
        #'(lambda (ignore-auto noconfirm) (avandu-list))))
 
+(defun avandu--clear-data ()
+  "Clean up login data. This makes for a clean slate next time."
+  (setq avandu-user nil
+        avandu-password nil
+        avandu--session-id nil))
+
 (defun avandu--get-status-id (results)
   "Get the status id from RESULTS."
   (cdr (assq 'status results)))
@@ -139,6 +145,7 @@ otherwise. Signals an error if we're not logged in *and* login
 was unsuccesful."
   (unless (or (and avandu--session-id (avandu-logged-in-p))
               (avandu-login))
+    (avandu--clear-data)
     (error "Could not log in to tt-rss")))
 
 (defmacro avandu-getset (var prompt &optional passwdp)
@@ -214,7 +221,7 @@ in. This function returns t if we are, or nil if we're not."
       result)))
 
 (defun avandu-login ()
-  "Send a request to log in to tt-rss. If `avandu-username' or
+  "Send a request to log in to tt-rss. If `avandu-user' or
 `avandu-password' have not been specified they will be asked for
 and saved in memory. This function returns t on succes, nil
 otherwise."
