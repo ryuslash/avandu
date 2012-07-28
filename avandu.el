@@ -211,6 +211,12 @@ bounds of a button."
     (button-put button 'face 'avandu-overview-read-article))
   (avandu-next-article))
 
+(defun avandu-logout ()
+  "Logout from Tiny Tiny RSS."
+  (interactive)
+  (avandu-send-command '((op . "logout")))
+  (avandu--clear-data))
+
 (defun avandu-logged-in-p ()
   "Send a request to tt-rss to see if we're (still) logged
 in. This function returns t if we are, or nil if we're not."
