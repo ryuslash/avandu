@@ -86,12 +86,14 @@
   "Face for article excerpts in avandu overview."
   :group 'avandu)
 
+(defcustom avandu-tt-rss-api-url nil
+  "URL of your Tiny Tiny RSS instance. For example:
+  http://tt-rss.org/demo/api/"
+  :group 'avandu
+  :type 'string)
+
 (defvar avandu--session-id nil
   "*internal* Session id for avandu.")
-
-(defvar avandu-tt-rss-api-url nil
-  "URL of your Tiny Tiny RSS instance. For example:
-  http://tt-rss.org/demo/api/")
 
 (defvar avandu-user nil
   "Username of your Tiny Tiny RSS account.")
