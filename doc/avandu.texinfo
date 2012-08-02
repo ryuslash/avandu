@@ -1,0 +1,169 @@
+\input texinfo                  @c -*- texinfo -*-
+@c %**start of header
+@setfilename avandu.info
+@documentlanguage nl
+@settitle Avandu
+@c %**end of header
+
+@node Top, Installation, (dir), (dir)
+@top Avandu
+
+Avandu is an emacs application that connects to a
+@uref{http://tt-rss.org, Tiny Tiny RSS} instance and allows you to
+read the articles it has gathered locally.
+
+The name avandu was taken from a random web 2.0 business name
+generator, as I am very bad at thinking up names.  If you have a
+suggestion for a better one, please let me know.
+
+@menu
+* Installation::  Downloading and installing avandu
+* Configuration:: Setting it up to work
+* Usage::         Reading some news
+@end menu
+
+@node Installation, Configuration, Top, Top
+@chapter Installing Avandu
+
+Installing avandu should be easiest when using package.el, the package
+manager for emacs 24.  Once this package is uploaded to
+@uref{http://marmalade-repo.org/,Marmalade} it should be as simple as
+calling
+
+@lisp
+(package-install "avandu")
+@end lisp
+
+@noindent
+but as long as that is not the case, of if you can't use it for some
+other reason, another way is to download it, either with
+@uref{http://git-scm.com/,git}:
+
+@example
+git clone git://ryuslash.org/emacs/avandu.git
+@end example
+
+@noindent
+or a
+@uref{http://code.ryuslash.org/cgit.cgi/emacs/avandu/snapshot/avandu-master.tar.gz,snapshot},
+which should then be unpacked.
+
+If you still have package.el available to you, you could use
+
+@lisp
+(package-install-file "/location/of/avandu.el")
+@end lisp
+
+@noindent
+to install it, or you could byte-compile it, place its location
+somewhere in your @code{load-path} and either @code{autoload} or
+@code{require} it.
+
+@lisp
+(add-to-list 'load-path "/path/to/avandu/")
+
+;; And then either:
+(autoload 'avandu-list "avandu" "Show a list of feeds." t)
+;; or:
+(require 'avandu)
+@end lisp
+
+@node Configuration, Usage, Installation, Top
+@chapter Configuring Avandu
+
+Now that it is installed, it needs to be configured
+(@pxref{Installation}), otherwise it won't work at all.
+
+Avandu only has one option at this time.
+
+@defopt avandu-tt-rss-api-url
+This option tells avandu where to look for the api to your Tiny Tiny
+RSS instance. This needs to be the complete url to the api, for
+example @indicateurl{http://tt-rss.org/demo/api/}. Before this option
+is set avandu won't be able to do anything.
+@end defopt
+
+Other than this, it is possible, but unnecessary to set the following
+variables.
+
+@defvar avandu-user
+The username that is used to log in to your Tiny Tiny RSS instance.
+This will get asked for when avandu tries to connect, and once a
+succesful connection has been made it will remember it.
+@end defvar
+
+@defvar avandu-password
+The password to use to log in to your Tiny Tiny RSS instance.  This
+option shouldn't really be set, it is mostly used to remember the
+password so that when a session ends, it can easily be restarted.
+
+Setting this variable manually in your emacs init file will make it
+easier for others to find, be careful if you do.
+@end defvar
+
+@node Usage,  , Configuration, Top
+@chapter Using Avandu
+
+Once it has been installed (@pxref{Installation}) and configured
+(@pxref{Configuration}) it is ready to be used.
+
+Avandu currently offers two things one can do with the stored feeds on
+the server.  View an overview of all the articles and see how many
+unread articles there are.
+
+@menu
+* Article overview:: A list of all unread articles
+* Other commands::   Anything else
+@end menu
+
+@node Article overview, Other commands, Usage, Usage
+@section Viewing unread articles
+
+The avandu overview lets you see a list of all the unread articles in
+Tiny Tiny RSS.
+
+@deffn Command avandu-list
+Show a list of all the unread articles that your Tiny Tiny RSS
+instance has stored, grouped by feed.  Due to certain
+@dfn{limitations} of Tiny Tiny RSS, this will only be at most 60
+articles at once, or less if the user/admin has changed this setting.
+
+Grouping is done very naively in avandu, as long as articles come from
+the same feed, they will be grouped together, if the articles are not
+already sorted by feed when avandu downloads them many headings might
+be created.
+@end deffn
+
+The overview can be used to view these articles. Pressing @kbd{r} on
+any article title will mark that article as read, pressing @kbd{o}
+will try to open it in your browser (using @code{browse-url}) and mark
+it as read.  Using @kbd{c} on any feed heading will @dfn{catch up}
+this feed, meaning it will mark all the articles in this feed as read.
+
+Anywhere in the buffer, pressing @kbd{n} or @kbd{p} will move the
+cursor to the next or previous article title respectively, and @kbd{N}
+and @kbd{P} will do the same, but move to feed headings.
+
+@node Other commands,  , Article overview, Usage
+@section All the others
+
+There is also the possibility to see how many unread articles there
+are and to manually login and logout of your Tiny Tiny RSS session,
+though logging in is done whenever necessary as well.
+
+@deffn Command avandu-new-articles-count
+Shows the total number of unread articles in Tiny Tiny RSS in the echo
+area.
+@end deffn
+
+@deffn Command avandu-login
+Log in to the Tiny Tiny RSS instance specified by the user (with
+@code{avandu-tt-rss-api-url}, @pxref{Configuration}), ask for the
+user's username and password if they're not already known and remember
+the session variable that was returned by the api.
+@end deffn
+
+@deffn Command avandu-logout
+Log out of the Tiny Tiny RSS instance, reset the session id, username
+and password used by avandu.
+@end deffn
