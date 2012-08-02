@@ -46,6 +46,8 @@
 
 ;;; Code:
 (require 'json)
+(require 'url)
+(require 'simple)
 
 (defgroup avandu nil
   "Tiny Tiny RSS interface for emacs."
