@@ -221,8 +221,15 @@ Apart from viewing unread articles there are a number of other things
 that can be done.
 
 @deffn Command avandu-new-articles-count
-Shows the total number of unread articles in Tiny Tiny RSS in the echo
-area.
+Ask Tiny Tiny RSS for the total number of unread articles.  If this
+function is called interactively in any way it shows a message en the
+echo area like:
+
+@example
+There are # unread articles
+@end example
+
+and it returns the number of unread articles as a string.
 @end deffn
 
 @deffn Command avandu-logged-in-p

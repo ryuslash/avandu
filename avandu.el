@@ -57,6 +57,9 @@
   "What to replace the part between & and ; of HTML entities with
   names.")
 
+(defconst avandu-overview-mode-name "Avandu:Overview"
+  "The default name for `avandu-overview-mode'.")
+
 (defconst avandu-version 0
   "The current version of avandu.")
 
@@ -377,8 +380,13 @@ bounds of a button."
 feeds."
   (interactive)
   (avandu--check-login)
-  (let ((result (avandu--send-command '((op . "getUnread")))))
-    (message (cdr (assq 'unread (assq 'content result))))))
+  (let* ((result (avandu--send-command '((op . "getUnread"))))
+         (count (cdr (assq 'unread (assq 'content result)))))
+
+    (when (called-interactively-p 'any)
+      (message "There are %s unread articles" count))
+
+    count))
 
 (defun avandu-next-article ()
   "Search forward for the next article."
@@ -425,7 +433,8 @@ feeds."
     version))
 
 ;; Overview
-(define-derived-mode avandu-overview-mode special-mode "Avandu:Overview"
+(define-derived-mode avandu-overview-mode special-mode
+  avandu-overview-mode-name
   "Major mode fo the avandu overview screen.
 
 This screen shows the articles categorized by feed as a list. It
@@ -435,7 +444,10 @@ doesn't sort the list, so you'll have to set that up in tt-rss.
 \\<avandu-overview-map>"
   (use-local-map avandu-overview-map)
   (set (make-local-variable 'revert-buffer-function)
-       #'(lambda (ignore-auto noconfirm) (avandu-list))))
+       #'(lambda (ignore-auto noconfirm) (avandu-list)))
+  (setq mode-name (format "%s[%s]"
+                          avandu-overview-mode-name
+                          (avandu-new-articles-count))))
 
 ;;;###autoload
 (defun avandu-list ()
@@ -487,11 +499,7 @@ by feed."
 ;;  (unread . t)
 ;;  (id . 109))
 
-;; (get-version)
 ;; (login user password)
-;; (logout)
-;; (is-logged-in)
-;; (get-unread)
 ;; (get-counters output-mode)
 ;; (get-feeds category-id unread-only limit offset)
 ;; (get-categories unread-only)
