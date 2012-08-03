@@ -326,6 +326,26 @@ returned json."
                            (feed_id . ,id))))
   (revert-buffer))
 
+(defun avandu-feeds (&optional category unread limit offset)
+  "Get the subscribed feeds.  If CATEGORY has been specified show
+only the feeds in CATEGORY.  If UNREAD has been specified only
+show feeds with unread articles in them.  Only fets LIMIT
+number of feeds, starting from OFFSET.
+
+There are a number of special category IDs:
+  0 -- Uncategorized feeds
+  -1 -- Special (e.g. Starred, Published, Archived, etc.) feeds
+  -2 -- Labels
+  -3 -- All feeds, excluding virtual feeds (e.g. Labels and such)
+  -4 -- All feeds, including virtual feeds"
+  (cdr (assq 'content
+             (avandu--send-command
+              `((op . "getFeeds")
+                ,@(when category `((cat_id . ,category)))
+                ,@(when unread `((unread_only . ,unread)))
+                ,@(when limit `((limit . ,limit)))
+                ,@(when offset `((offset . ,offset))))))))
+
 (defun avandu-logged-in-p ()
   "Send a request to tt-rss to see if we're (still) logged
 in. This function returns t if we are, or nil if we're not."
@@ -500,8 +520,6 @@ by feed."
 ;;  (id . 109))
 
 ;; (login user password)
-;; (get-counters output-mode)
-;; (get-feeds category-id unread-only limit offset)
 ;; (get-categories unread-only)
 ;; (get-headlines feed-id limit skip filter categoryp show-excerpt show-content view-mode include-attachments since-id search search-mode match-on)
 ;; (update-article article-ids mode field data)
