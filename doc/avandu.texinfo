@@ -241,3 +241,15 @@ the session variable that was returned by the api.
 Log out of the Tiny Tiny RSS instance, reset the session id, username
 and password used by avandu.
 @end deffn
+
+@deffn Command avandu-tt-rss-api-level
+Request the api level of the Tiny Tiny RSS instance.  If called
+interactively in any way it will print a message like:
+
+@example
+API Level: #
+@end example
+
+This does not currently serve any purpose, but it might be used in the
+future to determine which functions are available.
+@end deffn
