@@ -250,6 +250,19 @@ interactively in any way it will print a message like:
 API Level: #
 @end example
 
+and it returns the api level as an integer.
+
 This does not currently serve any purpose, but it might be used in the
 future to determine which functions are available.
+@end deffn
+
+@deffn Command avandu-tt-rss-version
+Get the version of the Tiny Tiny RSS instance.  If called
+interactively in any way it will print a message like:
+
+@example
+Tiny Tiny RSS Version: #
+@end example
+
+and it returns the version as a string.
 @end deffn

@@ -401,7 +401,7 @@ feeds."
   (avandu--next-button-of-type backward feed))
 
 (defun avandu-tt-rss-api-level ()
-  "Get the API level of the your Tiny Tiny RSS instance."
+  "Get the API level of your Tiny Tiny RSS instance."
   (interactive)
   (let ((level (cdr (assq 'level
                           (assq 'content
@@ -411,6 +411,18 @@ feeds."
       (message "API Level: %d" level))
 
     level))
+
+(defun avandu-tt-rss-version ()
+  "Get the version of your Tiny Tiny RSS instance."
+  (interactive)
+  (let ((version (cdr (assq 'version
+                            (assq 'content
+                                  (avandu--send-command
+                                   '((op . "getVersion"))))))))
+    (when (called-interactively-p 'any)
+      (message "Tiny Tiny RSS Version: %s" version))
+
+    version))
 
 ;; Overview
 (define-derived-mode avandu-overview-mode special-mode "Avandu:Overview"
