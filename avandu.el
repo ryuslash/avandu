@@ -105,6 +105,11 @@
   :group 'avandu
   :type 'string)
 
+(defcustom avandu-user nil
+  "Username of your Tiny Tiny RSS account."
+  :group 'avandu
+  :type 'string)
+
 ;; Variables
 (defvar avandu--session-id nil
   "*internal* Session id for avandu.")
@@ -136,9 +141,6 @@
 
 (defvar avandu-password nil
   "Password for your Tiny Tiny RSS account.")
-
-(defvar avandu-user nil
-  "Username of your Tiny Tiny RSS account.")
 
 ;; Macros
 (defmacro avandu--next-button-of-type (direction type)

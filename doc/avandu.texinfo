@@ -77,20 +77,22 @@ Now that it is installed, it needs to be configured
 Avandu only has one option at this time.
 
 @defopt avandu-tt-rss-api-url
-This option tells avandu where to look for the api to your Tiny Tiny
-RSS instance. This needs to be the complete url to the api, for
-example @indicateurl{http://tt-rss.org/demo/api/}. Before this option
-is set avandu won't be able to do anything.
+This option should contain a string. It tells avandu where to look for
+the api to your Tiny Tiny RSS instance. This needs to be the complete
+url to the api, for example
+@indicateurl{http://tt-rss.org/demo/api/}. Before this option is set
+avandu won't be able to do anything.
+@end defopt
+
+@defopt avandu-user
+This option should contain a string. It is the username that is used
+to log in to your Tiny Tiny RSS instance.  If it is @code{nil} it will
+get asked for when avandu tries to connect, and once a succesful
+connection has been made it will remember it until you log out.
 @end defopt
 
 Other than this, it is possible, but unnecessary to set the following
 variables.
-
-@defvar avandu-user
-The username that is used to log in to your Tiny Tiny RSS instance.
-This will get asked for when avandu tries to connect, and once a
-succesful connection has been made it will remember it.
-@end defvar
 
 @defvar avandu-password
 The password to use to log in to your Tiny Tiny RSS instance.  This
