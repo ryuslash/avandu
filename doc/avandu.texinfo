@@ -144,16 +144,88 @@ Anywhere in the buffer, pressing @kbd{n} or @kbd{p} will move the
 cursor to the next or previous article title respectively, and @kbd{N}
 and @kbd{P} will do the same, but move to feed headings.
 
+Explanations of all the related commands:
+
+@deffn Command avandu-browse-article
+Call @code{browse-url} to try and open the URL at point in your
+preferred browser.  This only works when the cursor is placed on an
+article title.
+
+In @code{avandu-list} this command gets bound to the @kbd{o} key in
+the article title's keymap, so pressing @kbd{o} on any article title
+will try and browse to it.
+@end deffn
+
+@deffn Command avandu-mark-article-read &optional button
+Ask Tiny Tiny RSS to mark the article associated with BUTTON as read.
+If BUTTON is omitted or @code{nil} it will try to use whatever is at
+@code{point}.
+
+In @code{avandu-list} this command gets bound to the @kbd{r} key in
+the article title's keymap.
+@end deffn
+
+@deffn Command avandu-next-article
+Search through the buffer for the next article header and move point
+to it.  This command wraps around the buffer, so when using it at the
+end of the buffer it will return to the top.
+
+In @code{avandu-list} this command gets bound to the @kbd{n} key in
+the major-mode's keymap, so pressing @kbd{n} anywhere in the buffer
+will go to the next article title.
+@end deffn
+
+@deffn Command avandu-previous-article
+Exactly like @code{avandu-next-article} except it looks for the
+previous article title.
+
+In @code{avandu-list} this command gets bound to the @kbd{p} key in
+the major-mode's keymap.
+@end deffn
+
+@deffn Command avandu-feed-catchup
+Ask the Tiny Tiny RSS instance to catch this feed up, meaning it will
+mark all the articles in it as read.  This command doesn't check
+which articles are being shown, it only sends the request to catch up
+and which feed to do that with, so if you leave your buffer open for a
+while you might mark articles you wish to read as read.  This only
+works when the cursor is placed on a feed title.
+
+In @code{avandu-list} this command gets bound to the @kbd{c} key in
+the feed title's keymap, so pressing @kbd{c} on any feed title will
+try and catch up the feed.
+@end deffn
+
+@deffn Command avandu-next-feed
+Exactly like @code{avandu-next-article} except it looks for the next
+feed title.
+
+In @code{avandu-list} this command gets bound to the @kbd{N} key in
+the major-mode's keymap.
+@end deffn
+
+@deffn Command avandu-previous-feed
+Exactly like @code{avandu-next-article} except it looks for the
+previous feed title.
+
+In @code{avandu-list} this command gets bound to the @kbd{P} key in
+the major-mode's keymap.
+@end deffn
+
 @node Other commands,  , Article overview, Usage
 @section All the others
 
-There is also the possibility to see how many unread articles there
-are and to manually login and logout of your Tiny Tiny RSS session,
-though logging in is done whenever necessary as well.
+Apart from viewing unread articles there are a number of other things
+that can be done.
 
 @deffn Command avandu-new-articles-count
 Shows the total number of unread articles in Tiny Tiny RSS in the echo
 area.
+@end deffn
+
+@deffn Command avandu-logged-in-p
+Asks Tiny Tiny RSS if the user with the currently known session id is
+still logged in.
 @end deffn
 
 @deffn Command avandu-login
