@@ -77,15 +77,15 @@ Now that it is installed, it needs to be configured
 Avandu only has one option at this time.
 
 @defopt avandu-tt-rss-api-url
-This option should contain a string. It tells avandu where to look for
-the api to your Tiny Tiny RSS instance. This needs to be the complete
-url to the api, for example
-@indicateurl{http://tt-rss.org/demo/api/}. Before this option is set
+This option should contain a string.  It tells avandu where to look
+for the api to your Tiny Tiny RSS instance.  This needs to be the
+complete url to the api, for example
+@indicateurl{http://tt-rss.org/demo/api/}.  Before this option is set
 avandu won't be able to do anything.
 @end defopt
 
 @defopt avandu-user
-This option should contain a string. It is the username that is used
+This option should contain a string.  It is the username that is used
 to log in to your Tiny Tiny RSS instance.  If it is @code{nil} it will
 get asked for when avandu tries to connect, and once a succesful
 connection has been made it will remember it until you log out.
@@ -136,7 +136,7 @@ already sorted by feed when avandu downloads them many headings might
 be created.
 @end deffn
 
-The overview can be used to view these articles. Pressing @kbd{r} on
+The overview can be used to view these articles.  Pressing @kbd{r} on
 any article title will mark that article as read, pressing @kbd{o}
 will try to open it in your browser (using @code{browse-url}) and mark
 it as read.  Using @kbd{c} on any feed heading will @dfn{catch up}
