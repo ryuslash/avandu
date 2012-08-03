@@ -57,6 +57,9 @@
   "What to replace the part between & and ; of HTML entities with
   names.")
 
+(defconst avandu-version 0
+  "The current version of avandu.")
+
 ;; Customization
 (defgroup avandu nil
   "Tiny Tiny RSS interface for emacs."
@@ -472,7 +475,6 @@ by feed."
 ;;  (unread . t)
 ;;  (id . 109))
 
-;; (get-api-level)
 ;; (get-version)
 ;; (login user password)
 ;; (logout)
