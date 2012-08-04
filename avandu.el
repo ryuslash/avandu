@@ -334,6 +334,50 @@ There are a number of special category IDs:
                 ,@(when limit `((limit . ,limit)))
                 ,@(when offset `((offset . ,offset))))))))
 
+(defun avandu-headlines (feed-id &optional limit skip is-cat show-excerpt
+                                 show-content view-mode
+                                 include-attachments since-id)
+  "Get a list of headlines from Tiny Tiny RSS from the feed
+identified by FEED-ID.  If LIMIT is specified only get LIMIT
+number of headlines, and if SKIP has been specified skip the
+first SKIP headlines.  If IS-CAT is non-nil, that means FEED-ID
+is actually the ID of a category. When SHOW-EXCERPT is non-nil,
+send back an excerpt along with the headline and if SHOW-CONTENT
+is non-nil send along the entire article.
+
+VIEW-MODE determines what type of headlines are sent back.
+  all_articles -- All articles found are sent back.
+  unread -- Only unread articles are sent back.
+  adaptive -- ?
+  marked -- ?
+  updated -- ?
+
+If INCLUDE-ATTATCHMENTS is non-nil, send along any files enclosed
+in the articles.
+
+If SINCE-ID is specified, send only articles with a FEED-ID
+greater than this.
+
+There are some special feed ids:
+  -1 -- Starred feeds
+  -2 -- Published feeds
+  -3 -- Fresh feeds (less than X hours old)
+  -4 -- All articles
+  0 -- Archived articles
+  IDs < -10 -- Labels"
+  (cdr (assq 'content
+             (avandu--send-command
+              `((op . "getHeadlines")
+                (feed_id . ,feed-id)
+                ,@(when limit `((limit . ,limit)))
+                ,@(when skip `((skip . ,skip)))
+                ,@(when is-cat `((is_cat . ,is-cat)))
+                ,@(when show-excerpt `((show_excerpt . ,show-excerpt)))
+                ,@(when show-content `((show_content . ,show-content)))
+                ,@(when view-mode `((view_mode . ,view-mode)))
+                ,@(when include-attachments `((include_attachments . ,include-attachments)))
+                ,@(when since-id `((since_id . ,since-id))))))))
+
 ;; Commands
 (defun avandu-browse-article ()
   "Browse the current button's article url."
@@ -484,10 +528,7 @@ by feed."
   (interactive)
   (avandu--check-login)
   (let ((buffer (get-buffer-create "*avandu-overview*"))
-        (result (avandu--send-command '((op . "getHeadlines")
-                                        (feed_id . -4)
-                                        (view_mode . "unread")
-                                        (show_excerpt . t))))
+        (result (avandu-headlines -4 nil nil nil t nil "unread"))
         feed-id)
     (with-current-buffer buffer
       (setq buffer-read-only nil)
@@ -505,7 +546,7 @@ by feed."
                  (cdr (assq 'title elt)))
                 (avandu--insert-article-excerpt
                  (cdr (assq 'excerpt elt))))
-            (cdr (assq 'content result)))
+            result)
       (setq buffer-read-only t)
       (goto-char (point-min))
       (avandu-overview-mode))
@@ -528,8 +569,6 @@ by feed."
 ;;  (id . 109))
 
 ;; (login user password)
-;; (get-categories unread-only)
-;; (get-headlines feed-id limit skip filter categoryp show-excerpt show-content view-mode include-attachments since-id search search-mode match-on)
 ;; (update-article article-ids mode field data)
 ;; (get-article article-id)
 ;; (get-config icons-dir icons-url daemon-is-running num-feeds)
