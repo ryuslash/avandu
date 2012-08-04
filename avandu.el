@@ -306,25 +306,13 @@ returned json."
     (kill-buffer buffer)
     result))
 
-;; Commands
-(defun avandu-browse-article ()
-  "Browse the current button's article url."
-  (interactive)
-  (let ((button (button-at (point))))
-    (browse-url (button-get button 'link))
-    (avandu-mark-article-read button)))
-
-(defun avandu-feed-catchup ()
-  "Send a request to tt-rss to \"Catch up\" with a feed.  This
-  means that all the (unread) articles in a feed will be marked
-  as read. After having completed this request the overview is
-  reloaded."
-  (interactive)
-  (let* ((button (button-at (point)))
-         (id (button-get button 'feed-id)))
-    (avandu--send-command `((op . "catchupFeed")
-                           (feed_id . ,id))))
-  (revert-buffer))
+(defun avandu-categories (&optional unread)
+  "Get the created categories.  If UNREAD is non-nil only get
+categories with feeds with unread articles in them."
+  (cdr (assq 'content
+             (avandu--send-command
+              `((op . "getCategories")
+                ,@(when unread `((unread_only . ,unread))))))))
 
 (defun avandu-feeds (&optional category unread limit offset)
   "Get the subscribed feeds.  If CATEGORY has been specified show
@@ -345,6 +333,26 @@ There are a number of special category IDs:
                 ,@(when unread `((unread_only . ,unread)))
                 ,@(when limit `((limit . ,limit)))
                 ,@(when offset `((offset . ,offset))))))))
+
+;; Commands
+(defun avandu-browse-article ()
+  "Browse the current button's article url."
+  (interactive)
+  (let ((button (button-at (point))))
+    (browse-url (button-get button 'link))
+    (avandu-mark-article-read button)))
+
+(defun avandu-feed-catchup ()
+  "Send a request to tt-rss to \"Catch up\" with a feed.  This
+  means that all the (unread) articles in a feed will be marked
+  as read. After having completed this request the overview is
+  reloaded."
+  (interactive)
+  (let* ((button (button-at (point)))
+         (id (button-get button 'feed-id)))
+    (avandu--send-command `((op . "catchupFeed")
+                           (feed_id . ,id))))
+  (revert-buffer))
 
 (defun avandu-logged-in-p ()
   "Send a request to tt-rss to see if we're (still) logged

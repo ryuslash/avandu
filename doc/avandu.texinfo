@@ -273,18 +273,3 @@ Tiny Tiny RSS Version: #
 
 and it returns the version as a string.
 @end deffn
-
-@deffn avandu-feeds &optional category unread limit offset
-Get a list of all the feeds in CATEGORY.  If CATEGORY is @code{nil},
-unspicified or 0, show uncategorized feeds.
-
-If UNREAD is non-@code{nil} only get feeds with unread articles in
-them.
-
-If LIMIT is non-@code{nil} only get LIMIT number of feeds and if
-OFFSET is non-@code{nil} start at OFFSET.
-
-Returns a vector of all the feeds.  This is not useful for users on
-its own, but if will be used in the future to make more views
-available.
-@end deffn
