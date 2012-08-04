@@ -391,6 +391,31 @@ There are some special feed IDs:
                   ,@(when include-attachments `((include_attachments . ,include-attachments)))
                   ,@(when since-id `((since_id . ,since-id)))))))))
 
+(defun avandu-update-article (article-ids mode field &optional data)
+  "Update the status of FIELD to MODE for the articles identified
+by ARTICLE-IDS.
+
+ARTICLE-IDS should either be a single integer or a
+comma-separated list of integers.
+
+MODE should be one of:
+  0 -- Set to false
+  1 -- Set to true
+  2 -- Toggle
+
+FIELD should be one of:
+  0 -- Starred
+  1 -- Published
+  2 -- Unread
+  3 -- Article Note
+
+When updating FIELD 3 DATA functions as the note's contents."
+  (avandu--send-command `((op . "updateArticle")
+                          (article_ids . ,article-ids)
+                          (mode . ,mode)
+                          (field . ,field)
+                          ,@(when data `((data . ,data))))))
+
 ;; Commands
 (defun avandu-browse-article ()
   "Browse the current button's article url."
@@ -453,10 +478,7 @@ bounds of a button."
   (interactive)
   (let* ((button (or button (button-at (point))))
          (id (button-get button 'article-id)))
-    (avandu--send-command `((op . "updateArticle")
-                            (article_ids . ,id)
-                            (mode . 0)
-                            (field . 2)))
+    (avandu-update-article id 0 2)
     (button-put button 'face 'avandu-overview-read-article))
   (avandu-next-article))
 
@@ -582,7 +604,6 @@ by feed."
 ;;  (id . 109))
 
 ;; (login user password)
-;; (update-article article-ids mode field data)
 ;; (get-article article-id)
 ;; (get-config icons-dir icons-url daemon-is-running num-feeds)
 ;; (update-feed feed-id)
