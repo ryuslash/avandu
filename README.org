@@ -12,7 +12,7 @@ file.
 
 Once installation is out of the way, it should get a value for
 =avandu-tt-rss-api-url= (for example: http://tt-rss.org/demo/api/) and
-then run =avandu-list=.
+then run =avandu-overview=.
 
 Once in avandu:overview mode some key bindings will be:
 

@@ -35,7 +35,7 @@
 
 ;; Once installation is out of the way, it should get a value for
 ;; `avandu-tt-rss-api-url' (for example: http://tt-rss.org/demo/api/)
-;; and then run `avandu-list'.
+;; and then run `avandu-overview'.
 
 ;; Once in avandu:overview mode some key bindings will be:
 
@@ -516,13 +516,13 @@ doesn't sort the list, so you'll have to set that up in tt-rss.
 \\<avandu-overview-map>"
   (use-local-map avandu-overview-map)
   (set (make-local-variable 'revert-buffer-function)
-       #'(lambda (ignore-auto noconfirm) (avandu-list)))
+       #'(lambda (ignore-auto noconfirm) (avandu-overview)))
   (setq mode-name (format "%s[%s]"
                           avandu-overview-mode-name
                           (avandu-new-articles-count))))
 
 ;;;###autoload
-(defun avandu-list ()
+(defun avandu-overview ()
   "Request the headlines of unread articles and list them grouped
 by feed."
   (interactive)

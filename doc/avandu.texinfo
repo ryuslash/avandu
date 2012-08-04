@@ -63,7 +63,7 @@ somewhere in your @code{load-path} and either @code{autoload} or
 (add-to-list 'load-path "/path/to/avandu/")
 
 ;; And then either:
-(autoload 'avandu-list "avandu" "Show a list of feeds." t)
+(autoload 'avandu-overview "avandu" "Show an overview of articles." t)
 ;; or:
 (require 'avandu)
 @end lisp
@@ -124,7 +124,7 @@ unread articles there are.
 The avandu overview lets you see a list of all the unread articles in
 Tiny Tiny RSS.
 
-@deffn Command avandu-list
+@deffn Command avandu-overview
 Show a list of all the unread articles that your Tiny Tiny RSS
 instance has stored, grouped by feed.  Due to certain
 @dfn{limitations} of Tiny Tiny RSS, this will only be at most 60
@@ -153,9 +153,9 @@ Call @code{browse-url} to try and open the URL at point in your
 preferred browser.  This only works when the cursor is placed on an
 article title.
 
-In @code{avandu-list} this command gets bound to the @kbd{o} key in
-the article title's keymap, so pressing @kbd{o} on any article title
-will try and browse to it.
+In @code{avandu-overview} this command gets bound to the @kbd{o} key
+in the article title's keymap, so pressing @kbd{o} on any article
+title will try and browse to it.
 @end deffn
 
 @deffn Command avandu-mark-article-read &optional button
@@ -163,8 +163,8 @@ Ask Tiny Tiny RSS to mark the article associated with BUTTON as read.
 If BUTTON is omitted or @code{nil} it will try to use whatever is at
 @code{point}.
 
-In @code{avandu-list} this command gets bound to the @kbd{r} key in
-the article title's keymap.
+In @code{avandu-overview} this command gets bound to the @kbd{r} key
+in the article title's keymap.
 @end deffn
 
 @deffn Command avandu-next-article
@@ -172,8 +172,8 @@ Search through the buffer for the next article header and move point
 to it.  This command wraps around the buffer, so when using it at the
 end of the buffer it will return to the top.
 
-In @code{avandu-list} this command gets bound to the @kbd{n} key in
-the major-mode's keymap, so pressing @kbd{n} anywhere in the buffer
+In @code{avandu-overview} this command gets bound to the @kbd{n} key
+in the major-mode's keymap, so pressing @kbd{n} anywhere in the buffer
 will go to the next article title.
 @end deffn
 
@@ -181,8 +181,8 @@ will go to the next article title.
 Exactly like @code{avandu-next-article} except it looks for the
 previous article title.
 
-In @code{avandu-list} this command gets bound to the @kbd{p} key in
-the major-mode's keymap.
+In @code{avandu-overview} this command gets bound to the @kbd{p} key
+in the major-mode's keymap.
 @end deffn
 
 @deffn Command avandu-feed-catchup
@@ -193,8 +193,8 @@ and which feed to do that with, so if you leave your buffer open for a
 while you might mark articles you wish to read as read.  This only
 works when the cursor is placed on a feed title.
 
-In @code{avandu-list} this command gets bound to the @kbd{c} key in
-the feed title's keymap, so pressing @kbd{c} on any feed title will
+In @code{avandu-overview} this command gets bound to the @kbd{c} key
+in the feed title's keymap, so pressing @kbd{c} on any feed title will
 try and catch up the feed.
 @end deffn
 
@@ -202,16 +202,16 @@ try and catch up the feed.
 Exactly like @code{avandu-next-article} except it looks for the next
 feed title.
 
-In @code{avandu-list} this command gets bound to the @kbd{N} key in
-the major-mode's keymap.
+In @code{avandu-overview} this command gets bound to the @kbd{N} key
+in the major-mode's keymap.
 @end deffn
 
 @deffn Command avandu-previous-feed
 Exactly like @code{avandu-next-article} except it looks for the
 previous feed title.
 
-In @code{avandu-list} this command gets bound to the @kbd{P} key in
-the major-mode's keymap.
+In @code{avandu-overview} this command gets bound to the @kbd{P} key
+in the major-mode's keymap.
 @end deffn
 
 @node Other commands,  , Article overview, Usage
