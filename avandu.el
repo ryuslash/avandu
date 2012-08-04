@@ -334,49 +334,62 @@ There are a number of special category IDs:
                 ,@(when limit `((limit . ,limit)))
                 ,@(when offset `((offset . ,offset))))))))
 
-(defun avandu-headlines (feed-id &optional limit skip is-cat show-excerpt
-                                 show-content view-mode
-                                 include-attachments since-id)
+(defun avandu-headlines (feed-id &rest plist)
   "Get a list of headlines from Tiny Tiny RSS from the feed
-identified by FEED-ID.  If LIMIT is specified only get LIMIT
-number of headlines, and if SKIP has been specified skip the
-first SKIP headlines.  If IS-CAT is non-nil, that means FEED-ID
-is actually the ID of a category. When SHOW-EXCERPT is non-nil,
-send back an excerpt along with the headline and if SHOW-CONTENT
-is non-nil send along the entire article.
+identified by FEED-ID.  Options about what to get can be
+specified in the form of a property list PLIST.
 
-VIEW-MODE determines what type of headlines are sent back.
+If `:limit' is specified only get that many headlines, and if
+`:skip' has been specified skip that many headlines first.
+
+If `:is-cat' is non-nil, that means FEED-ID is actually the ID of
+a category.
+
+When `:show-excerpt' is non-nil, send back an excerpt along with
+the headline and if `:show-content' is non-nil send along the
+entire article.
+
+`:view-mode' determines what type of headlines are sent back:
+
   all_articles -- All articles found are sent back.
   unread -- Only unread articles are sent back.
   adaptive -- ?
   marked -- ?
   updated -- ?
 
-If INCLUDE-ATTATCHMENTS is non-nil, send along any files enclosed
-in the articles.
+If `:include-attatchments' is non-nil, send along any files
+enclosed in the articles.
 
-If SINCE-ID is specified, send only articles with a FEED-ID
+If `:since-id' is specified, send only articles with a FEED-ID
 greater than this.
 
-There are some special feed ids:
+There are some special feed IDs:
   -1 -- Starred feeds
   -2 -- Published feeds
   -3 -- Fresh feeds (less than X hours old)
   -4 -- All articles
   0 -- Archived articles
   IDs < -10 -- Labels"
-  (cdr (assq 'content
-             (avandu--send-command
-              `((op . "getHeadlines")
-                (feed_id . ,feed-id)
-                ,@(when limit `((limit . ,limit)))
-                ,@(when skip `((skip . ,skip)))
-                ,@(when is-cat `((is_cat . ,is-cat)))
-                ,@(when show-excerpt `((show_excerpt . ,show-excerpt)))
-                ,@(when show-content `((show_content . ,show-content)))
-                ,@(when view-mode `((view_mode . ,view-mode)))
-                ,@(when include-attachments `((include_attachments . ,include-attachments)))
-                ,@(when since-id `((since_id . ,since-id))))))))
+  (let ((limit (plist-get plist :limit))
+        (skip (plist-get plist :skip))
+        (is-cat (plist-get plist :is-cat))
+        (show-excerpt (plist-get plist :show-excerpt))
+        (show-content (plist-get plist :show-content))
+        (view-mode (plist-get plist :view-mode))
+        (include-attachments (plist-get plist :include-attachments))
+        (since-id (plist-get plist :since-id)))
+    (cdr (assq 'content
+               (avandu--send-command
+                `((op . "getHeadlines")
+                  (feed_id . ,feed-id)
+                  ,@(when limit `((limit . ,limit)))
+                  ,@(when skip `((skip . ,skip)))
+                  ,@(when is-cat `((is_cat . ,is-cat)))
+                  ,@(when show-excerpt `((show_excerpt . ,show-excerpt)))
+                  ,@(when show-content `((show_content . ,show-content)))
+                  ,@(when view-mode `((view_mode . ,view-mode)))
+                  ,@(when include-attachments `((include_attachments . ,include-attachments)))
+                  ,@(when since-id `((since_id . ,since-id)))))))))
 
 ;; Commands
 (defun avandu-browse-article ()
@@ -528,7 +541,7 @@ by feed."
   (interactive)
   (avandu--check-login)
   (let ((buffer (get-buffer-create "*avandu-overview*"))
-        (result (avandu-headlines -4 nil nil nil t nil "unread"))
+        (result (avandu-headlines -4 :show-excerpt t :view-mode "unread"))
         feed-id)
     (with-current-buffer buffer
       (setq buffer-read-only nil)
