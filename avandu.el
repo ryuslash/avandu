@@ -227,7 +227,24 @@ with their char value or with the value in
   "Clean up login data. This makes for a clean slate next time."
   (setq avandu-user nil
         avandu--session-id nil)
-  (clear-string avandu-password))
+
+  (if (stringp avandu-password)
+      (clear-string avandu-password)
+    (setq avandu-password nil)))
+
+(defun avandu--get-credentials ()
+  "Get a username and password for Tiny Tiny RSS.  Try it first
+with `auth-source-search' and then by asking the user."
+  (let ((credentials (auth-source-search :max 1
+                                         :host avandu-tt-rss-api-url
+                                         :type 'netrc
+                                         :require '(:user :secret)
+                                         :user avandu-user)))
+    (if credentials
+        (setq avandu-user (plist-get (car credentials) :user)
+              avandu-password (plist-get (car credentials) :secret))
+      (avandu-getset avandu-user "Username: ")
+      (avandu-getset avandu-password "Password: " t))))
 
 (defun avandu--get-session-id (results)
   "Get the session id from RESULTS."
@@ -277,6 +294,13 @@ feed-id property."
    'action #'(lambda (button)
                (message "%s" (button-label button))))
   (insert-char ?\n 2))
+
+(defun avandu--password ()
+  "Get the password.  This means either return `avandu-password'
+as-is, or if it's a function return the result of that function."
+  (if (functionp avandu-password)
+      (funcall avandu-password)
+    avandu-password))
 
 (defun avandu--send-command (data)
   "Send a command with parameters DATA to tt-rss. The current
@@ -451,11 +475,13 @@ in. This function returns t if we are, or nil if we're not."
 and saved in memory. This function returns t on succes, nil
 otherwise."
   (interactive)
+  (unless (and avandu-user avandu-password)
+    (avandu--get-credentials))
+
   (let ((result (avandu--send-command
                  `((op . "login")
-                   (user . ,(avandu-getset avandu-user "Username: "))
-                   (password
-                    . ,(avandu-getset avandu-password "Password: " t))))))
+                   (user . ,avandu-user)
+                   (password . ,(avandu--password))))))
     (if (eq (avandu--get-status-id result) 0)
         (progn
           (setq avandu--session-id (avandu--get-session-id result))
