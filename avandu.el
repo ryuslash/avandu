@@ -272,28 +272,33 @@ with `auth-source-search' and then by asking the user."
 (defun avandu--insert-article-title (id link title)
   "Insert a button with the label TITLE and store ID and LINK in
 the article-id and link properties, respectively."
-  (insert-button
-   (avandu--oneline title)
-   'face 'avandu-overview-unread-article
-   'article-id id
-   'link link
-   'keymap avandu-article-button-map
-   'action #'(lambda (button)
-               (message "%s" (button-get button 'link))))
-  (insert-char ?\n 1))
+  (let ((pos (point)))
+    (insert-button
+     (avandu--oneline title)
+     'face 'avandu-overview-unread-article
+     'article-id id
+     'link link
+     'keymap avandu-article-button-map
+     'action #'(lambda (button)
+                 (message "%s" (button-get button 'link))))
+    (fill-region pos (point))
+    (insert-char ?\n 1)))
 
 (defun avandu--insert-feed-title (id title)
   "Insert a button with the label TITLE and store ID in the
 feed-id property."
   (unless (eq (point) (point-min)) (insert-char ?\n 1))
-  (insert-button
-   (avandu--oneline title)
-   'face 'avandu-overview-feed
-   'feed-id id
-   'keymap avandu-feed-button-map
-   'action #'(lambda (button)
-               (message "%s" (button-label button))))
-  (insert-char ?\n 2))
+
+  (let ((pos (point)))
+    (insert-button
+     (avandu--oneline title)
+     'face 'avandu-overview-feed
+     'feed-id id
+     'keymap avandu-feed-button-map
+     'action #'(lambda (button)
+                 (message "%s" (button-label button))))
+    (fill-region pos (point))
+    (insert-char ?\n 2)))
 
 (defun avandu--oneline (text)
   "Make a single line out of and clean up TEXT."
