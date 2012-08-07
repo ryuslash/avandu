@@ -448,9 +448,11 @@ When updating FIELD 3 DATA functions as the note's contents."
 (defun avandu-browse-article ()
   "Browse the current button's article url."
   (interactive)
-  (let ((button (button-at (point))))
+  (let ((button (button-at (point)))
+        (message-truncate-lines t))
     (browse-url (button-get button 'link))
-    (avandu-mark-article-read button)))
+    (avandu-mark-article-read button)
+    (message "Opened: %s" (button-label button))))
 
 (defun avandu-feed-catchup ()
   "Send a request to tt-rss to \"Catch up\" with a feed.  This
@@ -507,9 +509,11 @@ nil, it will be assumed that `point' is currently within the
 bounds of a button."
   (interactive)
   (let* ((button (or button (button-at (point))))
-         (id (button-get button 'article-id)))
+         (id (button-get button 'article-id))
+         (message-truncate-lines t))
     (avandu-update-article id 0 2)
-    (button-put button 'face 'avandu-overview-read-article))
+    (button-put button 'face 'avandu-overview-read-article)
+    (message "Marked article as read: %s" (button-label button)))
   (avandu-next-article))
 
 (defun avandu-new-articles-count ()
