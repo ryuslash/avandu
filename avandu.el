@@ -45,9 +45,10 @@
 ;; - `p' :: Previous article.
 
 ;;; Code:
+(require 'auth-source)
 (require 'json)
-(require 'url)
 (require 'simple)
+(require 'url)
 
 (defconst avandu-entity-replacement-alist
   '(("hellip" . 8230)
