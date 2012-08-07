@@ -572,7 +572,7 @@ feeds."
 ;; Overview
 (define-derived-mode avandu-overview-mode special-mode
   avandu-overview-mode-name
-  "Major mode fo the avandu overview screen.
+  "Major mode for the avandu overview screen.
 
 This screen shows the articles categorized by feed as a list. It
 doesn't sort the list, so you'll have to set that up in tt-rss.
