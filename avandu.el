@@ -259,8 +259,7 @@ with `auth-source-search' and then by asking the user."
   "Insert the excerpt of an article."
   (let ((start-pos (point))
         end-pos
-        (text (replace-regexp-in-string
-               "[ \t\n]*$" "" (avandu--clean-text excerpt))))
+        (text (avandu--oneline excerpt)))
     (unless (or (not text) (string= text ""))
       (insert
        (propertize
@@ -274,7 +273,7 @@ with `auth-source-search' and then by asking the user."
   "Insert a button with the label TITLE and store ID and LINK in
 the article-id and link properties, respectively."
   (insert-button
-   (replace-regexp-in-string "^[ \n\t]*\\|[ \n\t]*$" "" title)
+   (avandu--oneline title)
    'face 'avandu-overview-unread-article
    'article-id id
    'link link
@@ -288,13 +287,17 @@ the article-id and link properties, respectively."
 feed-id property."
   (unless (eq (point) (point-min)) (insert-char ?\n 1))
   (insert-button
-   (replace-regexp-in-string "^[ \n\t]*\\|[ \n\t]*$" "" title)
+   (avandu--oneline title)
    'face 'avandu-overview-feed
    'feed-id id
    'keymap avandu-feed-button-map
    'action #'(lambda (button)
                (message "%s" (button-label button))))
   (insert-char ?\n 2))
+
+(defun avandu--oneline (text)
+  "Make a single line out of and clean up TEXT."
+  (replace-regexp-in-string "[ \n\t]*$" "" (avandu--clean-text text)))
 
 (defun avandu--password ()
   "Get the password.  This means either return `avandu-password'
