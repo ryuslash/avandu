@@ -23,8 +23,9 @@
 
 ;;; Commentary:
 
-;; Avandu is an emacs mode that connects to a Tiny Tiny RSS instance
-;; and allows you to read the feeds it has gathered locally.
+;; Avandu is an emacs mode that connects to a Tiny Tiny RSS
+;; (http://tt-rss.org) instance and allows you to read the feeds it
+;; has gathered.
 
 ;; The simplest way to install it is to use package.el:
 
@@ -105,6 +106,21 @@
   "Face for unread article titles in avandu overview."
   :group 'avandu)
 
+(defface avandu-article-title
+  '((((class color)
+      (background dark))
+     (:foreground "orange3" :weight bold :family "sans"))
+    (((class color)
+      (background light))
+     (:foreground "red4" :weight bold :family "sans")))
+  "Face for titles in avandu article view."
+  :group 'avandu)
+
+(defface avandu-article-author
+  '((t (:inherit shadow :slant italic :height 0.9)))
+  "Face for the author's name in avandu article view."
+  :group 'avandu)
+
 ;; User options
 (defcustom avandu-tt-rss-api-url nil
   "URL of your Tiny Tiny RSS instance. For example:
@@ -117,6 +133,11 @@
   :group 'avandu
   :type 'string)
 
+(defcustom avandu-html2text-command nil
+  "Shell command to call to change HTML to plain text."
+  :group 'avandu
+  :type 'string)
+
 ;; Variables
 (defvar avandu--session-id nil
   "*internal* Session id for avandu.")
@@ -125,7 +146,12 @@
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map button-map)
     (define-key map "o" 'avandu-browse-article)
-    (define-key map "r" 'avandu-mark-article-read)
+    (define-key map "r" #'(lambda ()
+                            (interactive)
+                            (let ((button (button-at (point))))
+                              (avandu-mark-article-read
+                               (button-get button 'article-id))
+                              (avandu-ui-mark-article-read button))))
     map)
   "Keymap for articles in `avandu-overview-mode'.")
 
@@ -181,6 +207,10 @@
 `read-passwd' if PASSWDP and `read-string' otherwise."
   `(or ,var (setq ,var (,(if passwdp 'read-passwd 'read-string)
                         ,prompt))))
+
+(defmacro avu-prop (element property)
+  "Get PROPERTY from ELEMENT."
+  `(cdr (assq (quote ,property) ,element)))
 
 ;; Internal
 (defun avandu--check-login ()
@@ -249,11 +279,11 @@ with `auth-source-search' and then by asking the user."
 
 (defun avandu--get-session-id (results)
   "Get the session id from RESULTS."
-  (cdr (assq 'session_id (assq 'content results))))
+  (avu-prop (assq 'content results) session_id))
 
 (defun avandu--get-status-id (results)
   "Get the status id from RESULTS."
-  (cdr (assq 'status results)))
+  (avu-prop results status))
 
 (defun avandu--insert-article-excerpt (excerpt)
   "Insert the excerpt of an article."
@@ -280,7 +310,8 @@ the article-id and link properties, respectively."
      'link link
      'keymap avandu-article-button-map
      'action #'(lambda (button)
-                 (message "%s" (button-get button 'link))))
+                 (avandu-view-article (button-get button 'article-id))))
+
     (fill-region pos (point))
     (insert-char ?\n 1)))
 
@@ -337,15 +368,14 @@ returned json."
       (search-forward "\n\n")
       (setq result (json-read)))
     (kill-buffer buffer)
-    result))
+    (avu-prop result content)))
 
 (defun avandu-categories (&optional unread)
   "Get the created categories.  If UNREAD is non-nil only get
 categories with feeds with unread articles in them."
-  (cdr (assq 'content
-             (avandu--send-command
-              `((op . "getCategories")
-                ,@(when unread `((unread_only . ,unread))))))))
+  (avandu--send-command
+   `((op . "getCategories")
+     ,@(when unread `((unread_only . ,unread))))))
 
 (defun avandu-feeds (&optional category unread limit offset)
   "Get the subscribed feeds.  If CATEGORY has been specified show
@@ -359,13 +389,12 @@ There are a number of special category IDs:
   -2 -- Labels
   -3 -- All feeds, excluding virtual feeds (e.g. Labels and such)
   -4 -- All feeds, including virtual feeds"
-  (cdr (assq 'content
-             (avandu--send-command
-              `((op . "getFeeds")
-                ,@(when category `((cat_id . ,category)))
-                ,@(when unread `((unread_only . ,unread)))
-                ,@(when limit `((limit . ,limit)))
-                ,@(when offset `((offset . ,offset))))))))
+  (avandu--send-command
+   `((op . "getFeeds")
+     ,@(when category `((cat_id . ,category)))
+     ,@(when unread `((unread_only . ,unread)))
+     ,@(when limit `((limit . ,limit)))
+     ,@(when offset `((offset . ,offset))))))
 
 (defun avandu-headlines (feed-id &rest plist)
   "Get a list of headlines from Tiny Tiny RSS from the feed
@@ -411,18 +440,18 @@ There are some special feed IDs:
         (view-mode (plist-get plist :view-mode))
         (include-attachments (plist-get plist :include-attachments))
         (since-id (plist-get plist :since-id)))
-    (cdr (assq 'content
-               (avandu--send-command
-                `((op . "getHeadlines")
-                  (feed_id . ,feed-id)
-                  ,@(when limit `((limit . ,limit)))
-                  ,@(when skip `((skip . ,skip)))
-                  ,@(when is-cat `((is_cat . ,is-cat)))
-                  ,@(when show-excerpt `((show_excerpt . ,show-excerpt)))
-                  ,@(when show-content `((show_content . ,show-content)))
-                  ,@(when view-mode `((view_mode . ,view-mode)))
-                  ,@(when include-attachments `((include_attachments . ,include-attachments)))
-                  ,@(when since-id `((since_id . ,since-id)))))))))
+    (avandu--send-command
+     `((op . "getHeadlines")
+       (feed_id . ,feed-id)
+       ,@(when limit `((limit . ,limit)))
+       ,@(when skip `((skip . ,skip)))
+       ,@(when is-cat `((is_cat . ,is-cat)))
+       ,@(when show-excerpt `((show_excerpt . ,show-excerpt)))
+       ,@(when show-content `((show_content . ,show-content)))
+       ,@(when view-mode `((view_mode . ,view-mode)))
+       ,@(when include-attachments `((include_attachments
+                                      . ,include-attachments)))
+       ,@(when since-id `((since_id . ,since-id)))))))
 
 (defun avandu-update-article (article-ids mode field &optional data)
   "Update the status of FIELD to MODE for the articles identified
@@ -449,6 +478,13 @@ When updating FIELD 3 DATA functions as the note's contents."
                           (field . ,field)
                           ,@(when data `((data . ,data))))))
 
+(defun avandu-get-article (article-ids)
+  "Get one or more articles from Tiny Tiny RSS with ARTICLE-IDS,
+  if you're using version 1.5.0 or higher this can also be a
+  comma-separated list of ids."
+  (avandu--send-command `((op . "getArticle")
+                          (article_id . ,article-ids))))
+
 ;; Commands
 (defun avandu-browse-article ()
   "Browse the current button's article url."
@@ -456,7 +492,8 @@ When updating FIELD 3 DATA functions as the note's contents."
   (let ((button (button-at (point)))
         (message-truncate-lines t))
     (browse-url (button-get button 'link))
-    (avandu-mark-article-read button)
+    (avandu-mark-article-read (button-get button 'article-id))
+    (avandu-ui-mark-article-read button)
     (message "Opened: %s" (button-label button))))
 
 (defun avandu-feed-catchup ()
@@ -475,7 +512,7 @@ When updating FIELD 3 DATA functions as the note's contents."
   "Send a request to tt-rss to see if we're (still) logged
 in. This function returns t if we are, or nil if we're not."
   (let* ((response (avandu--send-command '((op . "isLoggedIn"))))
-         (result (cdr (assq 'status (assq 'content response)))))
+         (result (avu-prop response status)))
     (if (eq result :json-false)
         nil
       result)))
@@ -505,7 +542,7 @@ otherwise."
   (avandu--send-command '((op . "logout")))
   (avandu--clear-data))
 
-(defun avandu-mark-article-read (&optional button)
+(defun avandu-mark-article-read (id)
   "Send a request to tt-rss to mark an article as read.
 
 BUTTON, if given, should be a button widget, as created by
@@ -513,13 +550,18 @@ BUTTON, if given, should be a button widget, as created by
 nil, it will be assumed that `point' is currently within the
 bounds of a button."
   (interactive)
-  (let* ((button (or button (button-at (point))))
-         (id (button-get button 'article-id))
-         (message-truncate-lines t))
-    (avandu-update-article id 0 2)
-    (button-put button 'face 'avandu-overview-read-article)
-    (message "Marked article as read: %s" (button-label button)))
-  (avandu-next-article))
+  (let* ((message-truncate-lines t))
+    (avandu-update-article id 0 2)))
+
+(defun avandu-ui-mark-article-read (&optional button)
+  "Try to change the state of BUTTON to a read article button, if
+BUTTON is nil, try to use a button at `point'."
+  (let ((button (or button (button-at (point)))))
+    (if button
+        (progn
+          (button-put button 'face 'avandu-overview-read-article)
+          (avandu-next-article))
+      (error "No button found."))))
 
 (defun avandu-new-articles-count ()
   "Send a request to tt-rss for the total number of unread
@@ -527,7 +569,7 @@ feeds."
   (interactive)
   (avandu--check-login)
   (let* ((result (avandu--send-command '((op . "getUnread"))))
-         (count (cdr (assq 'unread (assq 'content result)))))
+         (count (avu-prop result unread)))
 
     (when (called-interactively-p 'any)
       (message "There are %s unread articles" count))
@@ -557,10 +599,8 @@ feeds."
 (defun avandu-tt-rss-api-level ()
   "Get the API level of your Tiny Tiny RSS instance."
   (interactive)
-  (let ((level (cdr (assq 'level
-                          (assq 'content
-                                (avandu--send-command
-                                 '((op . "getApiLevel"))))))))
+  (let ((level (avu-prop (avandu--send-command '((op . "getApiLevel")))
+                         level)))
     (when (called-interactively-p 'any)
       (message "API Level: %d" level))
 
@@ -569,10 +609,8 @@ feeds."
 (defun avandu-tt-rss-version ()
   "Get the version of your Tiny Tiny RSS instance."
   (interactive)
-  (let ((version (cdr (assq 'version
-                            (assq 'content
-                                  (avandu--send-command
-                                   '((op . "getVersion"))))))))
+  (let ((version (avu-prop (avandu--send-command '((op . "getVersion")))
+                           version)))
     (when (called-interactively-p 'any)
       (message "Tiny Tiny RSS Version: %s" version))
 
@@ -595,6 +633,15 @@ doesn't sort the list, so you'll have to set that up in tt-rss.
                           avandu-overview-mode-name
                           (avandu-new-articles-count))))
 
+(define-derived-mode avandu-article-mode special-mode
+  "Avandu:Article"
+  "Major mode for the avandu article screen.
+
+This screen shows the contents of an article.
+
+\\{avandu-overview-map}
+\\<avandu-overview-map>")
+
 ;;;###autoload
 (defun avandu-overview ()
   "Request the headlines of unread articles and list them grouped
@@ -610,20 +657,49 @@ by feed."
       (goto-char (point-min))
       (mapc #'(lambda (elt)
                 (unless (equal feed-id (assq 'feed_id elt))
-                  (avandu--insert-feed-title
-                   (cdr (assq 'feed_id elt))
-                   (cdr (assq 'feed_title elt))))
+                  (avandu--insert-feed-title (avu-prop elt feed_id)
+                                             (avu-prop elt feed_title)))
                 (setq feed-id (assq 'feed_id elt))
-                (avandu--insert-article-title
-                 (cdr (assq 'id elt))
-                 (cdr (assq 'link elt))
-                 (cdr (assq 'title elt)))
-                (avandu--insert-article-excerpt
-                 (cdr (assq 'excerpt elt))))
+                (avandu--insert-article-title (avu-prop elt id)
+                                              (avu-prop elt link)
+                                              (avu-prop elt title))
+                (avandu--insert-article-excerpt (avu-prop elt excerpt)))
             result)
       (setq buffer-read-only t)
       (goto-char (point-min))
       (avandu-overview-mode))
+    (switch-to-buffer buffer)))
+
+(defun avandu-view-article (id)
+  "Show a single article in a new buffer."
+  (interactive "nArticle id: ")
+  (let* ((data (avandu-get-article id))
+         (buffer (get-buffer-create "*avandu-article*"))
+         (inhibit-read-only t))
+    (with-current-buffer buffer
+      (erase-buffer)
+      (mapc #'(lambda (item)
+                (insert
+                 (propertize (avu-prop item title)
+                             'face 'avandu-article-title))
+                (newline)
+                (insert
+                 (propertize (concat "by: " (avu-prop item author))
+                             'face 'avandu-article-author))
+                (newline)(newline)
+                (let ((pos (point)))
+                  (insert (avu-prop item content))
+
+                  (when avandu-html2text-command
+                    (shell-command-on-region
+                     pos (point) avandu-html2text-command buffer t)))
+                (newline)(newline))
+            data)
+      (setq buffer-read-only t)
+      (goto-char (point-min))
+      (avandu-article-mode))
+    (avandu-mark-article-read id)
+    (avandu-ui-mark-article-read)
     (switch-to-buffer buffer)))
 
 (provide 'avandu)
