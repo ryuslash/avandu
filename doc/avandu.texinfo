@@ -17,9 +17,9 @@ generator, as I am very bad at thinking up names.  If you have a
 suggestion for a better one, please let me know.
 
 @menu
-* Installation::  Downloading and installing avandu
-* Configuration:: Setting it up to work
-* Usage::         Reading some news
+* Installation::                Downloading and installing avandu
+* Configuration::               Setting it up to work
+* Usage::                       Reading some news
 @end menu
 
 @node Installation, Configuration, Top, Top
@@ -84,15 +84,18 @@ complete url to the api, for example
 avandu won't be able to do anything.
 @end defopt
 
+Other than this, it is possible, but unnecessary to set the following
+variables.  These are unnecessary because Avandu also supports the use
+of @ref{Top,Auth-source,Aut-source,auth,Auth-source}, which supersedes
+these variables.  When using auth source be sure to use the
+@code{avandu-tt-rss-api-url} as the @code{machine} value.
+
 @defopt avandu-user
 This option should contain a string.  It is the username that is used
 to log in to your Tiny Tiny RSS instance.  If it is @code{nil} it will
 get asked for when avandu tries to connect, and once a succesful
 connection has been made it will remember it until you log out.
 @end defopt
-
-Other than this, it is possible, but unnecessary to set the following
-variables.
 
 @defvar avandu-password
 The password to use to log in to your Tiny Tiny RSS instance.  This
@@ -114,11 +117,12 @@ the server.  View an overview of all the articles and see how many
 unread articles there are.
 
 @menu
-* Article overview:: A list of all unread articles
-* Other commands::   Anything else
+* Article overview::            A list of all unread articles
+* Article view::                One or more articles in a buffer
+* Other commands::              Anything else
 @end menu
 
-@node Article overview, Other commands, Usage, Usage
+@node Article overview, Article view, Usage, Usage
 @section Viewing unread articles
 
 The avandu overview lets you see a list of all the unread articles in
@@ -214,7 +218,55 @@ In @code{avandu-overview} this command gets bound to the @kbd{P} key
 in the major-mode's keymap.
 @end deffn
 
-@node Other commands,  , Article overview, Usage
+@node Article view, Other commands, Article overview, Usage
+@section Viewing one or more articles
+
+The avandu article view lets you read one or more articles with all
+their content.
+
+@deffn Command avandu-view-article id
+Shows one or more articles with their content, possibly with its
+content rendered by an external application, emacs' w3m mode or
+anything you can think of/write yourself.
+
+Although there is no real obstacle to calling this command yourself,
+you will need an article id number, these are collected automatically
+when using @ref{Article overview}.
+@end deffn
+
+In order to have the articles rendered at all you would need to set
+@code{avandu-article-render-function}.
+
+@defopt avandu-article-render-function
+This setting should point to a function that takes two arguments, the
+start and end of the region to render.
+@end defopt
+
+Two functions come with Avandu to enable rendering.
+
+@defun avandu-view-possibly-external start end
+Call a shell command on the region between @var{start} and @var{end}.
+Which shell command should be called should be specified in
+@code{avandu-html2text-command}.
+@end defun
+
+@defopt avandu-html2text-command
+A string with a shell command.  This command will be called by
+@code{avandu-view-possibly-external} to render the region given to
+it. One example could be:
+
+@example
+w3m -dump -T text/HTML -cols 72
+@end example
+@end defopt
+
+@defun avandu-view-w3m
+This function requires the @code{w3m} module for emacs.  It sends the
+region on to @code{w3m-region} and then start @code{w3m-minor-mode} to
+give it the usual w3m viewing commands.
+@end defun
+
+@node Other commands,  , Article view, Usage
 @section All the others
 
 Apart from viewing unread articles there are a number of other things
