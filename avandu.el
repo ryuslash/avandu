@@ -342,7 +342,28 @@ as-is, or if it's a function return the result of that function."
       (funcall avandu-password)
     avandu-password))
 
-(defun avandu--send-command (data)
+(defun avandu--prep-params (data)
+  "Prepare DATA to be sent to Tiny Tiny RSS."
+  (json-encode (if avandu--session-id
+                   (append `((sid . ,avandu--session-id))
+                           data)
+                 data)))
+
+(defun avandu--send-command-async (data func)
+  "Send a command with parameters DATA to tt-rss asynchronously.
+  The current session-id is added to the request and then DATA is
+  passed on to `json-encode'.
+
+DATA should be an association list with at least an OP value.
+
+FUNC should be a callback function as defined by
+`url-retrieve'."
+  (let* ((url-request-data (avandu--prep-params data))
+         (url-request-method "POST"))
+    (unless (url-retrieve avandu-tt-rss-api-url func)
+      (message "Complete."))))
+
+(defun avandu--send-command-sync (data)
   "Send a command with parameters DATA to tt-rss. The current
 session-id is added to the request and then DATA is passed on to
 `json-encode'.
@@ -350,16 +371,11 @@ session-id is added to the request and then DATA is passed on to
 DATA should be an association list with at least an OP value.
 For example:
 
-    (avandu--send-command '((op . \"isLoggedIn\")))
+    (avandu--send-command-sync '((op . \"isLoggedIn\")))
 
 This function returns the result of `json-read' passed over the
 returned json."
-  (let* ((url-request-data
-          (json-encode
-           (if avandu--session-id
-               (append `((sid . ,avandu--session-id))
-                       data)
-             data)))
+  (let* ((url-request-data (avandu--prep-params data))
          (url-request-method "POST")
          (buffer (url-retrieve-synchronously avandu-tt-rss-api-url))
          result)
@@ -373,7 +389,7 @@ returned json."
 (defun avandu-categories (&optional unread)
   "Get the created categories.  If UNREAD is non-nil only get
 categories with feeds with unread articles in them."
-  (avandu--send-command
+  (avandu--send-command-sync
    `((op . "getCategories")
      ,@(when unread `((unread_only . ,unread))))))
 
@@ -389,7 +405,7 @@ There are a number of special category IDs:
   -2 -- Labels
   -3 -- All feeds, excluding virtual feeds (e.g. Labels and such)
   -4 -- All feeds, including virtual feeds"
-  (avandu--send-command
+  (avandu--send-command-sync
    `((op . "getFeeds")
      ,@(when category `((cat_id . ,category)))
      ,@(when unread `((unread_only . ,unread)))
@@ -440,7 +456,7 @@ There are some special feed IDs:
         (view-mode (plist-get plist :view-mode))
         (include-attachments (plist-get plist :include-attachments))
         (since-id (plist-get plist :since-id)))
-    (avandu--send-command
+    (avandu--send-command-sync
      `((op . "getHeadlines")
        (feed_id . ,feed-id)
        ,@(when limit `((limit . ,limit)))
@@ -472,18 +488,20 @@ FIELD should be one of:
   3 -- Article Note
 
 When updating FIELD 3 DATA functions as the note's contents."
-  (avandu--send-command `((op . "updateArticle")
-                          (article_ids . ,article-ids)
-                          (mode . ,mode)
-                          (field . ,field)
-                          ,@(when data `((data . ,data))))))
+  (avandu--send-command-async `((op . "updateArticle")
+                                (article_ids . ,article-ids)
+                                (mode . ,mode)
+                                (field . ,field)
+                                ,@(when data `((data . ,data))))
+                              (lambda (status)
+                                (message "Update done."))))
 
 (defun avandu-get-article (article-ids)
   "Get one or more articles from Tiny Tiny RSS with ARTICLE-IDS,
   if you're using version 1.5.0 or higher this can also be a
   comma-separated list of ids."
-  (avandu--send-command `((op . "getArticle")
-                          (article_id . ,article-ids))))
+  (avandu--send-command-sync `((op . "getArticle")
+                               (article_id . ,article-ids))))
 
 ;; Commands
 (defun avandu-browse-article ()
@@ -504,14 +522,16 @@ When updating FIELD 3 DATA functions as the note's contents."
   (interactive)
   (let* ((button (button-at (point)))
          (id (button-get button 'feed-id)))
-    (avandu--send-command `((op . "catchupFeed")
-                           (feed_id . ,id))))
+    (avandu--send-command-async `((op . "catchupFeed")
+                                  (feed_id . ,id))
+                                (lambda (status)
+                                  (message "Catch-up complete."))))
   (revert-buffer))
 
 (defun avandu-logged-in-p ()
   "Send a request to tt-rss to see if we're (still) logged
 in. This function returns t if we are, or nil if we're not."
-  (let* ((response (avandu--send-command '((op . "isLoggedIn"))))
+  (let* ((response (avandu--send-command-sync '((op . "isLoggedIn"))))
          (result (avu-prop response status)))
     (if (eq result :json-false)
         nil
@@ -526,7 +546,7 @@ otherwise."
   (unless (and avandu-user avandu-password)
     (avandu--get-credentials))
 
-  (let ((result (avandu--send-command
+  (let ((result (avandu--send-command-sync
                  `((op . "login")
                    (user . ,avandu-user)
                    (password . ,(avandu--password))))))
@@ -539,7 +559,9 @@ otherwise."
 (defun avandu-logout ()
   "Logout from Tiny Tiny RSS."
   (interactive)
-  (avandu--send-command '((op . "logout")))
+  (avandu--send-command-async '((op . "logout"))
+                              (lambda (status)
+                                (message "Logged out.")))
   (avandu--clear-data))
 
 (defun avandu-mark-article-read (id)
@@ -568,7 +590,7 @@ BUTTON is nil, try to use a button at `point'."
 feeds."
   (interactive)
   (avandu--check-login)
-  (let* ((result (avandu--send-command '((op . "getUnread"))))
+  (let* ((result (avandu--send-command-sync '((op . "getUnread"))))
          (count (avu-prop result unread)))
 
     (when (called-interactively-p 'any)
@@ -599,7 +621,8 @@ feeds."
 (defun avandu-tt-rss-api-level ()
   "Get the API level of your Tiny Tiny RSS instance."
   (interactive)
-  (let ((level (avu-prop (avandu--send-command '((op . "getApiLevel")))
+  (let ((level (avu-prop (avandu--send-command-sync
+                          '((op . "getApiLevel")))
                          level)))
     (when (called-interactively-p 'any)
       (message "API Level: %d" level))
@@ -609,7 +632,8 @@ feeds."
 (defun avandu-tt-rss-version ()
   "Get the version of your Tiny Tiny RSS instance."
   (interactive)
-  (let ((version (avu-prop (avandu--send-command '((op . "getVersion")))
+  (let ((version (avu-prop (avandu--send-command-sync
+                            '((op . "getVersion")))
                            version)))
     (when (called-interactively-p 'any)
       (message "Tiny Tiny RSS Version: %s" version))
