@@ -122,19 +122,24 @@
   :group 'avandu)
 
 ;; User options
+(defcustom avandu-article-render-function nil
+  "A function to call that will render the content of an article."
+  :group 'avandu
+  :type 'function)
+
 (defcustom avandu-tt-rss-api-url nil
   "URL of your Tiny Tiny RSS instance. For example:
   http://tt-rss.org/demo/api/"
   :group 'avandu
   :type 'string)
 
-(defcustom avandu-user nil
-  "Username of your Tiny Tiny RSS account."
+(defcustom avandu-html2text-command nil
+  "Shell command to call to change HTML to plain text."
   :group 'avandu
   :type 'string)
 
-(defcustom avandu-html2text-command nil
-  "Shell command to call to change HTML to plain text."
+(defcustom avandu-user nil
+  "Username of your Tiny Tiny RSS account."
   :group 'avandu
   :type 'string)
 
@@ -640,6 +645,19 @@ feeds."
 
     version))
 
+(defun avandu-view-possibly-external (start end)
+  "If `avandu-html2text-command' has been specified use that on
+the given region, otherwise just leave it alone."
+  (when avandu-html2text-command
+    (shell-command-on-region
+     start end avandu-html2text-command t t)))
+
+(defun avandu-view-w3m (start end)
+  "Use w3m to view an article."
+  (when (require 'w3m nil t)
+    (w3m-region start end)
+    (w3m-minor-mode)))
+
 ;; Overview
 (define-derived-mode avandu-overview-mode special-mode
   avandu-overview-mode-name
@@ -699,7 +717,9 @@ by feed."
   (interactive "nArticle id: ")
   (let* ((data (avandu-get-article id))
          (buffer (get-buffer-create "*avandu-article*"))
-         (inhibit-read-only t))
+         (inhibit-read-only t)
+         content-start
+         content-end)
     (with-current-buffer buffer
       (erase-buffer)
       (mapc #'(lambda (item)
@@ -711,12 +731,9 @@ by feed."
                  (propertize (concat "by: " (avu-prop item author))
                              'face 'avandu-article-author))
                 (newline)(newline)
-                (let ((pos (point)))
-                  (insert (avu-prop item content))
-
-                  (when avandu-html2text-command
-                    (shell-command-on-region
-                     pos (point) avandu-html2text-command buffer t)))
+                (setq content-start (point))
+                (insert (avu-prop item content))
+                (setq content-end (point))
                 (newline)(newline))
             data)
       (setq buffer-read-only t)
@@ -724,7 +741,11 @@ by feed."
       (avandu-article-mode))
     (avandu-mark-article-read id)
     (avandu-ui-mark-article-read)
-    (switch-to-buffer buffer)))
+    (switch-to-buffer buffer)
+    (when avandu-article-render-function
+      (funcall
+       avandu-article-render-function content-start
+       (min content-end (point-max))))))
 
 (provide 'avandu)
 
