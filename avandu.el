@@ -368,7 +368,7 @@ FUNC should be a callback function as defined by
     (unless (url-retrieve avandu-tt-rss-api-url func)
       (message "Complete."))))
 
-(defun avandu--send-command-sync (data)
+(defun avandu--send-command-sync (data &optional raw)
   "Send a command with parameters DATA to tt-rss. The current
 session-id is added to the request and then DATA is passed on to
 `json-encode'.
@@ -378,8 +378,9 @@ For example:
 
     (avandu--send-command-sync '((op . \"isLoggedIn\")))
 
-This function returns the result of `json-read' passed over the
-returned json."
+This function returns the content part of the result of
+`json-read' passed over the returned json, unless RAW is non-nil,
+in which case the result is returned as-is."
   (let* ((url-request-data (avandu--prep-params data))
          (url-request-method "POST")
          (buffer (url-retrieve-synchronously avandu-tt-rss-api-url))
@@ -389,7 +390,9 @@ returned json."
       (search-forward "\n\n")
       (setq result (json-read)))
     (kill-buffer buffer)
-    (avu-prop result content)))
+    (if (not raw)
+        (avu-prop result content)
+      result)))
 
 (defun avandu-categories (&optional unread)
   "Get the created categories.  If UNREAD is non-nil only get
@@ -554,7 +557,7 @@ otherwise."
   (let ((result (avandu--send-command-sync
                  `((op . "login")
                    (user . ,avandu-user)
-                   (password . ,(avandu--password))))))
+                   (password . ,(avandu--password))) t)))
     (if (eq (avandu--get-status-id result) 0)
         (progn
           (setq avandu--session-id (avandu--get-session-id result))
