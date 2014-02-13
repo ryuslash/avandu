@@ -687,14 +687,27 @@ This screen shows the contents of an article.
 \\{avandu-overview-map}
 \\<avandu-overview-map>")
 
+(defsubst avandu--feed-id (alist)
+  "Get a feed_id from ALIST."
+  (cdr (assoc 'feed_id alist)))
+
+(defun avandu--order-feed (feed1 feed2)
+  "Return t if FEED1 should be sorted before FEED2."
+  (string< (avandu--feed-id feed1) (avandu--feed-id feed2)))
+
 ;;;###autoload
 (defun avandu-overview ()
-  "Request the headlines of unread articles and list them grouped
-by feed."
+  "Request the headlines of unread articles and list them.
+
+The list is grouped and sorted by feed ID.  Sorting by feed ID is
+meaningless, but it's easy."
   (interactive)
   (avandu--check-login)
   (let ((buffer (get-buffer-create "*avandu-overview*"))
-        (result (avandu-headlines -4 :show-excerpt t :view-mode "unread"))
+        (result (sort (cl-coerce (avandu-headlines -4 :show-excerpt t
+                                                   :view-mode "unread")
+                                 'list)
+                      #'avandu--order-feed))
         feed-id)
     (with-current-buffer buffer
       (setq buffer-read-only nil)
