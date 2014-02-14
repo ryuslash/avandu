@@ -56,8 +56,7 @@
     ("qout" . 34)
     ("amp" . 38)
     ("nbsp" . 32))
-  "What to replace the part between & and ; of HTML entities with
-  names.")
+  "What to replace certain HTML entities with.")
 
 (defconst avandu-overview-mode-name "Avandu:Overview"
   "The default name for `avandu-overview-mode'.")
@@ -128,8 +127,9 @@
   :type 'function)
 
 (defcustom avandu-tt-rss-api-url nil
-  "URL of your Tiny Tiny RSS instance. For example:
-  http://tt-rss.org/demo/api/"
+  "URL of your Tiny Tiny RSS instance.
+
+For example: http://tt-rss.org/demo/api/"
   :group 'avandu
   :type 'string)
 
@@ -145,7 +145,7 @@
 
 ;; Variables
 (defvar avandu--session-id nil
-  "*internal* Session id for avandu.")
+  "*Internal* Session id for avandu.")
 
 (defvar avandu-article-button-map
   (let ((map (make-sparse-keymap)))
@@ -208,29 +208,33 @@
        (goto-char pos))))
 
 (defmacro avandu-getset (var prompt &optional passwdp)
-  "Ask the user for, and then save, VAR with PROMPT. Use
+  "Ask the user for VAR with PROMPT.
+
+After getting the answer from the user save the value.  Use
 `read-passwd' if PASSWDP and `read-string' otherwise."
   `(or ,var (setq ,var (,(if passwdp 'read-passwd 'read-string)
                         ,prompt))))
 
 (defmacro avu-prop (element property)
-  "Get PROPERTY from ELEMENT."
+  "Look in ELEMENT for PROPERTY."
   `(cdr (assq (quote ,property) ,element)))
 
 ;; Internal
 (defun avandu--check-login ()
-  "Check to see if we're (still) logged in, try to login
-otherwise. Signals an error if we're not logged in *and* login
-was unsuccesful."
+  "Check to see if we're (still) logged in.
+
+Try to login otherwise.  Signals an error if we're not logged in
+*and* login was unsuccesful."
   (unless (or (and avandu--session-id (avandu-logged-in-p))
               (avandu-login))
     (avandu--clear-data)
     (error "Could not log in to tt-rss")))
 
 (defun avandu--clean-text (text)
-  "Go through TEXT and remove any trailing and leading whitespace
-from it, then look for any HTML entities and either replace them
-with their char value or with the value in
+  "Go through TEXT and remove any trailing and leading whitespace.
+
+Then look for any HTML entities and either replace them with
+their char value or with the value in
 `avandu-entity-replacement-alist'."
   (with-temp-buffer
     (insert text)
@@ -260,7 +264,7 @@ with their char value or with the value in
   text)
 
 (defun avandu--clear-data ()
-  "Clean up login data. This makes for a clean slate next time."
+  "Clean up login data.  Clean the slate for next time."
   (setq avandu-user nil
         avandu--session-id nil)
 
@@ -269,8 +273,10 @@ with their char value or with the value in
     (setq avandu-password nil)))
 
 (defun avandu--get-credentials ()
-  "Get a username and password for Tiny Tiny RSS.  Try it first
-with `auth-source-search' and then by asking the user."
+  "Get a username and password for Tiny Tiny RSS.
+
+Try it first with `auth-source-search' and then by asking the
+user."
   (let ((credentials (auth-source-search :max 1
                                          :host avandu-tt-rss-api-url
                                          :type 'netrc
@@ -291,7 +297,7 @@ with `auth-source-search' and then by asking the user."
   (avu-prop results status))
 
 (defun avandu--insert-article-excerpt (excerpt)
-  "Insert the excerpt of an article."
+  "Insert EXCERPT of an article."
   (let ((start-pos (point))
         end-pos
         (text (avandu--oneline excerpt)))
@@ -305,8 +311,10 @@ with `auth-source-search' and then by asking the user."
       (insert-char ?\n 1))))
 
 (defun avandu--insert-article-title (id link title)
-  "Insert a button with the label TITLE and store ID and LINK in
-the article-id and link properties, respectively."
+  "Insert a button.
+
+Store ID and LINK in the `article-id' and `link' properties
+respectively, use TITLE as the text for the button."
   (let ((pos (point)))
     (insert-button
      (avandu--oneline title)
@@ -321,8 +329,10 @@ the article-id and link properties, respectively."
     (insert-char ?\n 1)))
 
 (defun avandu--insert-feed-title (id title)
-  "Insert a button with the label TITLE and store ID in the
-feed-id property."
+  "Insert a button.
+
+Store ID in the `feed-id' property and use TITLE as the text of
+the button."
   (unless (eq (point) (point-min)) (insert-char ?\n 1))
 
   (let ((pos (point)))
@@ -341,8 +351,10 @@ feed-id property."
   (replace-regexp-in-string "[ \n\t]*$" "" (avandu--clean-text text)))
 
 (defun avandu--password ()
-  "Get the password.  This means either return `avandu-password'
-as-is, or if it's a function return the result of that function."
+  "Get the password.
+
+This means either return `avandu-password' as-is, or if it's a
+function return the result of that function."
   (if (functionp avandu-password)
       (funcall avandu-password)
     avandu-password))
@@ -356,8 +368,9 @@ as-is, or if it's a function return the result of that function."
 
 (defun avandu--send-command-async (data func)
   "Send a command with parameters DATA to tt-rss asynchronously.
-  The current session-id is added to the request and then DATA is
-  passed on to `json-encode'.
+
+The current session-id is added to the request and then DATA is
+passed on to `json-encode'.
 
 DATA should be an association list with at least an OP value.
 
@@ -369,9 +382,10 @@ FUNC should be a callback function as defined by
       (message "Complete."))))
 
 (defun avandu--send-command-sync (data &optional raw)
-  "Send a command with parameters DATA to tt-rss. The current
-session-id is added to the request and then DATA is passed on to
-`json-encode'.
+  "Send a command with parameters DATA to tt-rss.
+
+The current session-id is added to the request and then DATA is
+passed on to `json-encode'.
 
 DATA should be an association list with at least an OP value.
 For example:
@@ -395,17 +409,20 @@ in which case the result is returned as-is."
       result)))
 
 (defun avandu-categories (&optional unread)
-  "Get the created categories.  If UNREAD is non-nil only get
-categories with feeds with unread articles in them."
+  "Get the created categories.
+
+If UNREAD is non-nil only get categories with feeds with unread
+articles in them."
   (avandu--send-command-sync
    `((op . "getCategories")
      ,@(when unread `((unread_only . ,unread))))))
 
 (defun avandu-feeds (&optional category unread limit offset)
-  "Get the subscribed feeds.  If CATEGORY has been specified show
-only the feeds in CATEGORY.  If UNREAD has been specified only
-show feeds with unread articles in them.  Only fets LIMIT
-number of feeds, starting from OFFSET.
+  "Get the subscribed feeds.
+
+If CATEGORY has been specified show only the feeds in CATEGORY.
+If UNREAD has been specified only show feeds with unread articles
+in them.  Only fets LIMIT number of feeds, starting from OFFSET.
 
 There are a number of special category IDs:
   0 -- Uncategorized feeds
@@ -421,9 +438,11 @@ There are a number of special category IDs:
      ,@(when offset `((offset . ,offset))))))
 
 (defun avandu-headlines (feed-id &rest plist)
-  "Get a list of headlines from Tiny Tiny RSS from the feed
-identified by FEED-ID.  Options about what to get can be
-specified in the form of a property list PLIST.
+  "Get a list of headlines from Tiny Tiny RSS.
+
+Get the ones for the feed identified by FEED-ID.  Options about
+what to get can be specified in the form of a property list
+PLIST.
 
 If `:limit' is specified only get that many headlines, and if
 `:skip' has been specified skip that many headlines first.
@@ -478,8 +497,9 @@ There are some special feed IDs:
        ,@(when since-id `((since_id . ,since-id)))))))
 
 (defun avandu-update-article (article-ids mode field &optional data)
-  "Update the status of FIELD to MODE for the articles identified
-by ARTICLE-IDS.
+  "Update the status of a field.
+
+For each id in ARTICLE-IDS put MODE in FIELD.
 
 ARTICLE-IDS should either be a single integer or a
 comma-separated list of integers.
@@ -505,9 +525,10 @@ When updating FIELD 3 DATA functions as the note's contents."
                                 (message "Update done."))))
 
 (defun avandu-get-article (article-ids)
-  "Get one or more articles from Tiny Tiny RSS with ARTICLE-IDS,
-  if you're using version 1.5.0 or higher this can also be a
-  comma-separated list of ids."
+  "Get one or more articles from Tiny Tiny RSS.
+
+Filter the articles by ARTICLE-IDS, if you're using version 1.5.0
+or higher this can also be a comma-separated list of ids."
   (avandu--send-command-sync `((op . "getArticle")
                                (article_id . ,article-ids))))
 
@@ -523,10 +544,11 @@ When updating FIELD 3 DATA functions as the note's contents."
     (message "Opened: %s" (button-label button))))
 
 (defun avandu-feed-catchup ()
-  "Send a request to tt-rss to \"Catch up\" with a feed.  This
-  means that all the (unread) articles in a feed will be marked
-  as read. After having completed this request the overview is
-  reloaded."
+  "Send a request to tt-rss to \"Catch up\" with a feed.
+
+This means that all the (unread) articles in a feed will be
+marked as read. After having completed this request the overview
+is reloaded."
   (interactive)
   (let* ((button (button-at (point)))
          (id (button-get button 'feed-id)))
@@ -537,8 +559,9 @@ When updating FIELD 3 DATA functions as the note's contents."
   (revert-buffer))
 
 (defun avandu-logged-in-p ()
-  "Send a request to tt-rss to see if we're (still) logged
-in. This function returns t if we are, or nil if we're not."
+  "Send a request to tt-rss to see if we're (still) logged in.
+
+This function returns t if we are, or nil if we're not."
   (let* ((response (avandu--send-command-sync '((op . "isLoggedIn"))))
          (result (avu-prop response status)))
     (if (eq result :json-false)
@@ -546,10 +569,11 @@ in. This function returns t if we are, or nil if we're not."
       result)))
 
 (defun avandu-login ()
-  "Send a request to log in to tt-rss. If `avandu-user' or
-`avandu-password' have not been specified they will be asked for
-and saved in memory. This function returns t on succes, nil
-otherwise."
+  "Send a request to log in to tt-rss.
+
+If `avandu-user' or `avandu-password' have not been specified
+they will be asked for and saved in memory.  This function
+returns t on succes, nil otherwise."
   (interactive)
   (unless (and avandu-user avandu-password)
     (avandu--get-credentials))
@@ -575,27 +599,24 @@ otherwise."
 (defun avandu-mark-article-read (id)
   "Send a request to tt-rss to mark an article as read.
 
-BUTTON, if given, should be a button widget, as created by
-`button-insert' and such, which contains FEED-ID. If BUTTON is
-nil, it will be assumed that `point' is currently within the
-bounds of a button."
+Update the article identified by ID."
   (interactive)
   (let* ((message-truncate-lines t))
     (avandu-update-article id 0 2)))
 
 (defun avandu-ui-mark-article-read (&optional button)
-  "Try to change the state of BUTTON to a read article button, if
-BUTTON is nil, try to use a button at `point'."
+  "Try to change the state of BUTTON to a read article button.
+
+If BUTTON is nil, try to use a button at `point'."
   (let ((button (or button (button-at (point)))))
     (if button
         (progn
           (button-put button 'face 'avandu-overview-read-article)
           (avandu-next-article))
-      (error "No button found."))))
+      (error "No button found"))))
 
 (defun avandu-new-articles-count ()
-  "Send a request to tt-rss for the total number of unread
-feeds."
+  "Get the total number of unread feeds."
   (interactive)
   (avandu--check-login)
   (let* ((result (avandu--send-command-sync '((op . "getUnread"))))
@@ -649,14 +670,16 @@ feeds."
     version))
 
 (defun avandu-view-possibly-external (start end)
-  "If `avandu-html2text-command' has been specified use that on
-the given region, otherwise just leave it alone."
+  "Maybe execute a command on the region between START and END.
+
+If `avandu-html2text-command' has been specified use that on the
+given region, otherwise just leave it alone."
   (when avandu-html2text-command
     (shell-command-on-region
      start end avandu-html2text-command t t)))
 
 (defun avandu-view-w3m (start end)
-  "Use w3m to view an article."
+  "Render the region between START and END with w3m."
   (when (require 'w3m nil t)
     (w3m-region start end)
     (w3m-minor-mode)))
@@ -729,7 +752,7 @@ meaningless, but it's easy."
     (switch-to-buffer buffer)))
 
 (defun avandu-view-article (id)
-  "Show a single article in a new buffer."
+  "Show a single article identified by ID in a new buffer."
   (interactive "nArticle id: ")
   (let* ((data (avandu-get-article id))
          (buffer (get-buffer-create "*avandu-article*"))
