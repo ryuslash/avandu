@@ -121,7 +121,7 @@
   :group 'avandu)
 
 ;; User options
-(defcustom avandu-article-render-function nil
+(defcustom avandu-article-render-function #'shr-render-region
   "A function to call that will render the content of an article."
   :group 'avandu
   :type 'function)
