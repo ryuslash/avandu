@@ -769,6 +769,13 @@ meaningless, but it's easy."
                 (insert
                  (propertize (concat "by: " (avu-prop item author))
                              'face 'avandu-article-author))
+                (insert " (")
+                (insert-button
+                 "Browse original"
+                 'url (avu-prop item link)
+                 'action #'(lambda (button)
+                             (browse-url (button-get button 'url))))
+                (insert ")")
                 (newline)(newline)
                 (setq content-start (point))
                 (insert (avu-prop item content))
