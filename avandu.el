@@ -701,14 +701,13 @@ doesn't sort the list, so you'll have to set that up in tt-rss.
                           avandu-overview-mode-name
                           (avandu-new-articles-count))))
 
-(define-derived-mode avandu-article-mode special-mode
-  "Avandu:Article"
+(define-derived-mode avandu-article-mode view-mode "Avandu:Article"
   "Major mode for the avandu article screen.
 
 This screen shows the contents of an article.
 
-\\{avandu-overview-map}
-\\<avandu-overview-map>")
+\\{avandu-article-mode-map}
+\\<avandu-article-mode-map>")
 
 (defsubst avandu--feed-id (alist)
   "Get a feed_id from ALIST."
