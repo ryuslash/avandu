@@ -790,7 +790,8 @@ meaningless, but it's easy."
     (when avandu-article-render-function
       (funcall
        avandu-article-render-function content-start
-       (min content-end (point-max))))))
+       (min content-end (point-max))))
+    (goto-char (point-min))))
 
 (provide 'avandu)
 
