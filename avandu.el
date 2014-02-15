@@ -143,6 +143,30 @@ For example: http://tt-rss.org/demo/api/"
   :group 'avandu
   :type 'string)
 
+(defcustom avandu-next-button-fallback-function #'shr-next-link
+  "The fallback function to use when `avandu-next-button' fails.
+
+Your HTML renderer might not create links the same way avandu
+does, as is the case with `shr'.  This will try the specified
+function, if avandu can't find a next link, before giving up.
+
+The specified value should be a function that can take 0
+arguments."
+  :group 'avandu
+  :type 'function)
+
+(defcustom avandu-previous-button-fallback-function #'shr-previous-link
+  "The fallback function to use when `avandu-previous-button' fails.
+
+Your HTML renderer might not create links the same way avandu
+does, as is the case with `shr'.  This will try the specified
+function, if avandu can't find a next link, before giving up.
+
+The specified value should be a function that can take 0
+arguments."
+  :group 'avandu
+  :type 'function)
+
 ;; Variables
 (defvar avandu--session-id nil
   "*Internal* Session id for avandu.")
@@ -176,6 +200,14 @@ For example: http://tt-rss.org/demo/api/"
     (define-key map "P" 'avandu-previous-feed)
     map)
   "Keymap for `avandu-overview-mode'.")
+
+(defvar avandu-article-mode-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map view-mode-map)
+    (define-key map (kbd "TAB") #'avandu-next-button)
+    (define-key map (kbd "<backtab>") #'avandu-previous-button)
+    map)
+  "Keymap for `avandu-atricle-mode'.")
 
 (defvar avandu-password nil
   "Password for your Tiny Tiny RSS account.")
@@ -632,6 +664,14 @@ If BUTTON is nil, try to use a button at `point'."
   (interactive)
   (avandu--next-button-of-type forward article))
 
+(defun avandu-next-button ()
+  "Search forward for the next button."
+  (interactive)
+  (let ((button-overlay (next-button (point))))
+    (if button-overlay
+        (goto-char (overlay-start button-overlay))
+      (funcall avandu-next-button-fallback-function))))
+
 (defun avandu-next-feed ()
   "Go forward and find the next feed."
   (interactive)
@@ -641,6 +681,14 @@ If BUTTON is nil, try to use a button at `point'."
   "Go backward and find the next article."
   (interactive)
   (avandu--next-button-of-type backward article))
+
+(defun avandu-previous-button ()
+  "Go backward and find the next button."
+  (interactive)
+  (let ((button-overlay (previous-button (point))))
+    (if button-overlay
+        (goto-char (overlay-start button-overlay))
+      (funcall avandu-previous-button-fallback-function))))
 
 (defun avandu-previous-feed ()
   "Go backward and find the next feed."
