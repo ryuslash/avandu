@@ -205,7 +205,7 @@ arguments."
 
 (defvar avandu-article-mode-map
   (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map view-mode-map)
+    (set-keymap-parent map special-mode-map)
     (define-key map (kbd "TAB") #'avandu-next-button)
     (define-key map (kbd "<backtab>") #'avandu-previous-button)
     map)
@@ -751,7 +751,7 @@ doesn't sort the list, so you'll have to set that up in tt-rss.
                           avandu-overview-mode-name
                           (avandu-new-articles-count))))
 
-(define-derived-mode avandu-article-mode view-mode "Avandu:Article"
+(define-derived-mode avandu-article-mode special-mode "Avandu:Article"
   "Major mode for the avandu article screen.
 
 This screen shows the contents of an article.
