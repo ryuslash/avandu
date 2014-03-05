@@ -217,15 +217,15 @@ arguments."
 ;; Macros
 (defmacro avandu--next-button-of-type (direction type)
   "Go DIRECTION and find the next button of a TYPE."
-  (let ((prop (case type
+  (let ((prop (cl-case type
                 (feed 'feed-id)
                 (article 'article-id)
                 (t (error "Invalid type"))))
-        (next-point-function (case direction
+        (next-point-function (cl-case direction
                                (forward 'point-min)
                                (backward 'point-max)
                                (t (error "Invalid direction"))))
-        (next-button-function (case direction
+        (next-button-function (cl-case direction
                                 (forward 'next-button)
                                 (backward 'previous-button)
                                 (t (error "Invalid direction")))))
