@@ -719,6 +719,19 @@ If BUTTON is nil, try to use a button at `point'."
 
     version))
 
+;;;###autoload
+(defun avandu-subscribe-to-feed (url)
+  "Subscribe to the feed at URL optionally putting it in CATEGORY."
+  (interactive "MUrl: ")
+  (let ((status (avu-prop (avu-prop (avandu--send-command-sync
+                                     `((op . "subscribeToFeed")
+                                       (feed_url . ,url)))
+                                    status)
+                          code)))
+    (if (= status 1)
+        (message "Succesfully subscribed to feed")
+      (message "Could not subscribe to feed"))))
+
 (defun avandu-view-possibly-external (start end)
   "Maybe execute a command on the region between START and END.
 
