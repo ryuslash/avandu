@@ -447,9 +447,14 @@ in which case the result is returned as-is."
 
 If UNREAD is non-nil only get categories with feeds with unread
 articles in them."
-  (avandu--send-command-sync
-   `((op . "getCategories")
-     ,@(when unread `((unread_only . ,unread))))))
+  (let ((hash (make-hash-table :test 'equal)))
+    (mapc (lambda (category)
+            (setf (gethash (cdr (assq 'title category)) hash)
+                  (cdr (assq 'id category))))
+          (avandu--send-command-sync
+           `((op . "getCategories")
+             ,@(when unread `((unread_only . ,unread))))))
+    hash))
 
 (defun avandu-feeds (&optional category unread limit offset)
   "Get the subscribed feeds.
@@ -720,12 +725,17 @@ If BUTTON is nil, try to use a button at `point'."
     version))
 
 ;;;###autoload
-(defun avandu-subscribe-to-feed (url)
+(defun avandu-subscribe-to-feed (url category)
   "Subscribe to the feed at URL optionally putting it in CATEGORY."
-  (interactive "MUrl: ")
+  (interactive (let ((categories (avandu-categories)))
+                 (list (read-from-minibuffer "URL: ")
+                       (gethash (completing-read "Category: "
+                                                 categories nil t)
+                                categories))))
   (let ((status (avu-prop (avu-prop (avandu--send-command-sync
                                      `((op . "subscribeToFeed")
-                                       (feed_url . ,url)))
+                                       (feed_url . ,url)
+                                       (category_id . ,category)))
                                     status)
                           code)))
     (if (= status 1)
