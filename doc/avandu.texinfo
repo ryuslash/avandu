@@ -325,3 +325,12 @@ Tiny Tiny RSS Version: #
 
 and it returns the version as a string.
 @end deffn
+
+@deffn Command avandu-subscribe-to-feed feed category
+Ask Tiny Tiny RSS to subscribe to @var{feed} and put it in the
+category @var{category}. @var{feed} should be a URL and @var{category}
+the id of the category as known in Tiny Tiny RSS.
+
+When used interactively the user will be prompted for both, and
+completions will be offered for @var{category} to make things easier.
+@end deffn
