@@ -334,3 +334,8 @@ the id of the category as known in Tiny Tiny RSS.
 When used interactively the user will be prompted for both, and
 completions will be offered for @var{category} to make things easier.
 @end deffn
+
+@deffn Command avandu-unsubscribe-from-feed id
+Ask Tiny Tiny RSS to unsubscribe from the feed identified with
+@var{id}. Completion is provided to make selection easier.
+@end deffn

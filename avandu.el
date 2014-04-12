@@ -476,6 +476,15 @@ There are a number of special category IDs:
      ,@(when limit `((limit . ,limit)))
      ,@(when offset `((offset . ,offset))))))
 
+(defun avandu--all-feeds-hash ()
+  "Get a hashtable of all feeds subsrcibed to in tt-rss."
+  (let ((hash (make-hash-table :test 'equal)))
+    (mapc (lambda (feed)
+            (setf (gethash (cdr (assq 'title feed)) hash)
+                  (cdr (assq 'id feed))))
+          (avandu-feeds -3))
+    hash))
+
 (defun avandu-headlines (feed-id &rest plist)
   "Get a list of headlines from Tiny Tiny RSS.
 
@@ -741,6 +750,19 @@ If BUTTON is nil, try to use a button at `point'."
     (if (= status 1)
         (message "Succesfully subscribed to feed")
       (message "Could not subscribe to feed"))))
+
+;;;###autoload
+(defun avandu-unsubscribe-from-feed (id)
+  "Unsubscribe from ID."
+  (interactive (let ((feeds (avandu--all-feeds-hash)))
+                 (list (gethash (completing-read "Feed: " feeds nil t)
+                                feeds))))
+  (let ((status (avu-prop (avandu--send-command-sync
+                           `((op . "unsubscribeFeed")
+                             (feed_id . ,id))) status)))
+    (if (string= status "OK")
+        (message "Succesfully unsubscribed from feed")
+      (message "Could not unsubscribe from feed"))))
 
 (defun avandu-view-possibly-external (start end)
   "Maybe execute a command on the region between START and END.
