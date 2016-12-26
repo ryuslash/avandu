@@ -171,6 +171,15 @@ In @code{avandu-overview} this command gets bound to the @kbd{r} key
 in the article title's keymap.
 @end deffn
 
+@deffn Command avandu-mark-article-unread &optional button
+Ask Tiny Tiny RSS to mark the article associated with BUTTON as
+unread.  If BUTTON is omitted or @code{nil} it will try to use
+whatever is at @code{point}.
+
+In @code{avandu-overview} this command gets bound to the @kbd{u} key
+in the article title's keymap.
+@end deffn
+
 @deffn Command avandu-next-article
 Search through the buffer for the next article header and move point
 to it.  This command wraps around the buffer, so when using it at the
