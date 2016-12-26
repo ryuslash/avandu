@@ -17,6 +17,7 @@ then run =avandu-overview=.
 Once in avandu:overview mode some key bindings will be:
 
 - ~r~:: Mark article at point as read.
+- ~u~:: Mark article at point as unread.
 - ~o~:: Open article at point in a browser.  Uses =browse-url=.
 - ~n~:: Next article.
 - ~p~:: Previous article.

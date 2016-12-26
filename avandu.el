@@ -183,6 +183,12 @@ arguments."
                               (avandu-mark-article-read
                                (button-get button 'article-id))
                               (avandu-ui-mark-article-read button))))
+    (define-key map "u" #'(lambda ()
+                            (interactive)
+                            (let ((button (button-at (point))))
+                              (avandu-mark-article-unread
+                               (button-get button 'article-id))
+                              (avandu-ui-mark-article-unread button))))
     map)
   "Keymap for articles in `avandu-overview-mode'.")
 
@@ -652,6 +658,14 @@ Update the article identified by ID."
   (let* ((message-truncate-lines t))
     (avandu-update-article id 0 2)))
 
+(defun avandu-mark-article-unread (id)
+  "Send a request to tt-rss to mark an article as unread.
+
+Update the article identified by ID."
+  (interactive)
+  (let* ((message-truncate-lines t))
+    (avandu-update-article id 1 2)))
+
 (defun avandu-ui-mark-article-read (&optional button)
   "Try to change the state of BUTTON to a read article button.
 
@@ -660,6 +674,17 @@ If BUTTON is nil, try to use a button at `point'."
     (if button
         (progn
           (button-put button 'face 'avandu-overview-read-article)
+          (avandu-next-article))
+      (error "No button found"))))
+
+(defun avandu-ui-mark-article-unread (&optional button)
+  "Try to change the state of BUTTON to an unread article button.
+
+If BUTTON is nil, try to use a button at `point'."
+  (let ((button (or button (button-at (point)))))
+    (if button
+        (progn
+          (button-put button 'face 'avandu-overview-unread-article)
           (avandu-next-article))
       (error "No button found"))))
 
