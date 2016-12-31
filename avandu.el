@@ -1,8 +1,8 @@
 ;;; avandu.el --- Gateway to Tiny Tiny RSS
 
-;; Copyright (C) 2012 Tom Willemsen <tom@ryuslash.org>
+;; Copyright (C) 2012 Tom Willemse <tom@ryuslash.org>
 
-;; Author: Tom Willemsen <tom@ryuslash.org>
+;; Author: Tom Willemse <tom@ryuslash.org>
 ;; Created: Jul 22, 2012
 ;; Version: 0
 ;; Keywords: net
