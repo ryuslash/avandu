@@ -53,6 +53,9 @@
 (require 'url)
 (require 'view)
 
+(declare-function w3m-region "w3m")
+(declare-function w3m-minor-mode "w3m")
+
 (defconst avandu-entity-replacement-alist
   '(("hellip" . 8230)
     ("qout" . 34)
