@@ -23,7 +23,7 @@
 
 ;;; Commentary:
 
-;; Avandu is an emacs mode that connects to a Tiny Tiny RSS
+;; Avandu is an Emacs mode that connects to a Tiny Tiny RSS
 ;; (http://tt-rss.org) instance and allows you to read the feeds it
 ;; has gathered.
 
