@@ -260,6 +260,11 @@ After getting the answer from the user save the value.  Use
   `(cdr (assq (quote ,property) ,element)))
 
 ;; Internal
+(defun avandu--check ()
+  "Check to see if everything is ready to go."
+  (avandu--check-setup)
+  (avandu--check-login))
+
 (defun avandu--check-login ()
   "Check to see if we're (still) logged in.
 
@@ -269,6 +274,11 @@ Try to login otherwise.  Signals an error if we're not logged in
               (avandu-login))
     (avandu--clear-data)
     (error "Could not log in to tt-rss")))
+
+(defun avandu--check-setup ()
+  "Check to see if everything's been set-up correctly."
+  (unless avandu-tt-rss-api-url
+    (user-error "No URL has been specified in `avandu-tt-rss-api-url', please do so")))
 
 (defun avandu--clean-text (text)
   "Go through TEXT and remove any trailing and leading whitespace.
@@ -844,7 +854,7 @@ This screen shows the contents of an article.
 The list is grouped and sorted by feed ID.  Sorting by feed ID is
 meaningless, but it's easy."
   (interactive)
-  (avandu--check-login)
+  (avandu--check)
   (let ((buffer (get-buffer-create "*avandu-overview*"))
         (result (sort (cl-coerce (avandu-headlines -4 :show-excerpt t
                                                    :view-mode "unread")
