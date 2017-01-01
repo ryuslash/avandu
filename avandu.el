@@ -220,6 +220,12 @@ arguments."
     map)
   "Keymap for `avandu-atricle-mode'.")
 
+(defvar avandu-browse-original-button-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map button-map)
+    (define-key map (kbd "u") #'avandu-copy-url)
+    map))
+
 (defvar avandu-password nil
   "Password for your Tiny Tiny RSS account.")
 
@@ -817,6 +823,13 @@ given region, otherwise just leave it alone."
     (w3m-region start end)
     (w3m-minor-mode)))
 
+(defun avandu-copy-url ()
+  "Copy the url of the button at point."
+  (interactive)
+  (let ((url (button-get (button-at (point)) 'url)))
+    (kill-new url)
+    (message "Copied %s" url)))
+
 ;; Overview
 (define-derived-mode avandu-overview-mode special-mode
   avandu-overview-mode-name
@@ -906,7 +919,8 @@ meaningless, but it's easy."
                  "Browse original"
                  'url (avu-prop item link)
                  'action #'(lambda (button)
-                             (browse-url (button-get button 'url))))
+                             (browse-url (button-get button 'url)))
+                 'keymap avandu-browse-original-button-map)
                 (insert ")")
                 (newline)(newline)
                 (setq content-start (point))
