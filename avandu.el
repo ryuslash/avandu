@@ -129,24 +129,28 @@
 (defcustom avandu-article-render-function #'shr-render-region
   "A function to call that will render the content of an article."
   :group 'avandu
-  :type 'function)
+  :type '(choice (const :tag "None" nil)
+                 (function :tag "Function")))
 
 (defcustom avandu-tt-rss-api-url nil
   "URL of your Tiny Tiny RSS instance.
 
 For example: http://tt-rss.org/demo/api/"
   :group 'avandu
-  :type 'string)
+  :type '(choice (const :tag "Empty" nil)
+                 (string :tag "Url")))
 
 (defcustom avandu-html2text-command nil
   "Shell command to call to change HTML to plain text."
   :group 'avandu
-  :type 'string)
+  :type '(choice (const :tag "None" nil)
+                 (string :tag "Command")))
 
 (defcustom avandu-user nil
   "Username of your Tiny Tiny RSS account."
   :group 'avandu
-  :type 'string)
+  :type '(choice (const :tag "Empty")
+                 (string :tag "Username")))
 
 (defcustom avandu-next-button-fallback-function #'shr-next-link
   "The fallback function to use when `avandu-next-button' fails.
@@ -158,7 +162,8 @@ function, if avandu can't find a next link, before giving up.
 The specified value should be a function that can take 0
 arguments."
   :group 'avandu
-  :type 'function)
+  :type '(choice (const :tag "None" nil)
+                 (function :tag "Function")))
 
 (defcustom avandu-previous-button-fallback-function #'shr-previous-link
   "The fallback function to use when `avandu-previous-button' fails.
@@ -170,7 +175,8 @@ function, if avandu can't find a next link, before giving up.
 The specified value should be a function that can take 0
 arguments."
   :group 'avandu
-  :type 'function)
+  :type '(choice (const :tag "None" nil)
+                 (function :tag "Function")))
 
 ;; Variables
 (defvar avandu--session-id nil
