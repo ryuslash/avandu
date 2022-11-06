@@ -857,11 +857,14 @@ This screen shows the contents of an article.
 
 (defsubst avandu--feed-id (alist)
   "Get a feed_id from ALIST."
-  (cdr (assoc 'feed_id alist)))
+  (let ((raw-id (cdr (assoc 'feed_id alist))))
+    (if (stringp raw-id)
+        (string-to-number raw-id)
+      raw-id)))
 
-(defun avandu--order-feed (feed1 feed2)
-  "Return t if FEED1 should be sorted before FEED2."
-  (string< (avandu--feed-id feed1) (avandu--feed-id feed2)))
+(defun avandu-feed< (feed1 feed2)
+  "Return t if FEED1 is considered less than FEED2."
+  (< (avandu--feed-id feed1) (avandu--feed-id feed2)))
 
 ;;;###autoload
 (defun avandu-overview ()
@@ -875,7 +878,7 @@ meaningless, but it's easy."
         (result (sort (cl-coerce (avandu-headlines -4 :show-excerpt t
                                                    :view-mode "unread")
                                  'list)
-                      #'avandu--order-feed))
+                      #'avandu-feed<))
         feed-id)
     (with-current-buffer buffer
       (setq buffer-read-only nil)
